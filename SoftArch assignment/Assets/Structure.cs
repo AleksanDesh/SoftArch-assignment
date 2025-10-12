@@ -3,7 +3,7 @@
 //│  ├─ Events              // IEventBus, domain event definitions
 //│  ├─ Services            // IGameStateService, ITimeProvider, IAssetLoader, SaveService (if used)
 //│  └─ Utils               // small helpers, ID generation, math/extension methods
-//│  └─Pooling              // If needed. For now disconnected.
+//│  └─Pooling              // If needed. (for now disconnected)
 //├─ Gameplay
 //│  ├─ Player
 //│  │  ├─ Controller      // First-person controller adapter, view/controller glue
@@ -37,5 +37,6 @@
 //│  └─ Runtime            // AudioService, SFX/Music events
 //├─ Persistence
 //│  └─ DTOs               // save DTOs (PlayerStateDTO, LevelStateDTO) — if I save
-//└─ Editor                // editor-only tools (in Editor assembly / folder)
+//├─ Editor                // editor-only tools (in Editor assembly / folder)
+//└─ Tools                 // tools that help building the level
 

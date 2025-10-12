@@ -6,7 +6,7 @@ namespace DungeonCrawler.Gameplay.Player.Controller
     public class PlayerInputManager : MonoBehaviour
     {
         public MyCharacterController Character;
-        public ExampleCharacterCamera CharacterCamera;
+        public MyCharacterCamera CharacterCamera;
 
         private const string MouseXInput = "Mouse X";
         private const string MouseYInput = "Mouse Y";
@@ -36,6 +36,13 @@ namespace DungeonCrawler.Gameplay.Player.Controller
             if (Input.GetKeyDown(KeyCode.LeftControl))
             {
                 Character.SwitchOrientationMethod();
+            }
+
+            if (Input.GetKeyDown(KeyCode.LeftAlt))
+            {
+                Cursor.lockState = Cursor.lockState == CursorLockMode.None ? CursorLockMode.Locked : CursorLockMode.None;
+
+                Cursor.visible = (Cursor.lockState == CursorLockMode.None);
             }
 
             HandleCharacterInput();
