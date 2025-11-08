@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace DungeonCrawler.Gameplay.Player.Data
+namespace DungeonCrawler.Gameplay.Stats
 {
     [CreateAssetMenu(menuName = "DungeonCrawler/Levels/LevelConfig", fileName = "LevelConfig")]
     public class LevelConfig : ScriptableObject

@@ -1,5 +1,5 @@
 using DungeonCrawler.Core.Utils;
-using DungeonCrawler.Gameplay.Player.Data;
+using DungeonCrawler.Gameplay.Stats;
 using UnityEngine;
 
 namespace DungeonCrawler.Gameplay.Stats.Rewards

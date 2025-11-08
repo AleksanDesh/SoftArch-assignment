@@ -1,7 +1,5 @@
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Utils;
-using DungeonCrawler.Gameplay.Player.Data;
-using DungeonCrawler.Gameplay.Stats.Rewards;
 using System.Collections.Generic;
 using UnityEngine;
 
