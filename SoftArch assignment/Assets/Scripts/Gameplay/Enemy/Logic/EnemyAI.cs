@@ -10,6 +10,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
 {
     [RequireComponent(typeof(Entity))]
     [RequireComponent(typeof(NavMeshAgent))]
+    [RequireComponent(typeof(Health))]
     public class EnemyAI : MonoBehaviour
     {
         [Header("Targeting / Aggro")]
@@ -29,7 +30,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
 
         [Header("Optional Archetype")]
         [Tooltip("Optional ScriptableObject to provide stats. If assigned, archetype values override the fields above on Start.")]
-        public MeleeEnemyType Archetype;
+        public EnemyType Archetype;
 
         [Header("Optional modular components (auto-detected if left empty)")]
         [Tooltip("Assign the movement controller component that implements IMovementController, or leave null to auto-detect.")]

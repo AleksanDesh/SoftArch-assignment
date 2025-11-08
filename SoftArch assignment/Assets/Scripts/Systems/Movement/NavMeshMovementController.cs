@@ -11,7 +11,7 @@ namespace DungeonCrawler.Systems.Movement
     {
         NavMeshAgent _agent;
         Entity _owner;
-        MeleeEnemyType _archetype;
+        EnemyType _archetype;
         Vector3 _currentDest = Vector3.zero;
 
         public bool IsMoving => _agent != null && _agent.hasPath && !_agent.isStopped;
@@ -22,7 +22,7 @@ namespace DungeonCrawler.Systems.Movement
             _agent = GetComponent<NavMeshAgent>();
         }
 
-        public void Initialize(Entity owner, MeleeEnemyType archetype)
+        public void Initialize(Entity owner, EnemyType archetype)
         {
             Debug.Log("Using custom movement logic Melee");
             _owner = owner;

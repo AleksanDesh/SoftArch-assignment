@@ -9,7 +9,7 @@ namespace DungeonCrawler.Systems.CombatSystem
     public interface IAttackHandler
     {
         /// <summary>Initialize the handler with owning entity and archetype.</summary>
-        void Initialize(Entity owner, MeleeEnemyType archetype);
+        void Initialize(Entity owner, EnemyType archetype);
 
         /// <summary>Try to attack the target entity. Returns true if an attack was performed (cooldown consumed).</summary>
         bool TryAttack(Entity target);

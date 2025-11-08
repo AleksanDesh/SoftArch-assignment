@@ -19,15 +19,26 @@ namespace DungeonCrawler.Systems.CombatSystem
         void OnDeath(DeathEvent ev)
         {
             if (ev.Consumed) return;
-            var entity = ev.TargetEntity;
+            var entity = ev.SourceEntity;
             if (entity == null)
             {
-                Debug.LogWarning($"DeathSystem: No entity found for id {ev.TargetEntity.Id}");
+                Debug.LogWarning($"DeathSystem: No entity found for id {ev.SourceEntity.Id}");
                 ev.Consumed = true;
                 return;
             }
 
-            Debug.Log($"{entity.name} was slain by {ev.SourceEntity}.");
+
+            if (ev.xp > 0 && ev.TargetEntity != null)
+            {
+                if (EventBus.Instance != null)
+                {
+                    Debug.Log("Sending experience gain event to " + ev.TargetEntity.name);
+                    EventBus.Instance.Enqueue(new ExperienceGainedEvent(ev.TargetEntity, ev.xp, ev.SourceEntity));
+                }
+            }
+
+
+            Debug.Log($"{entity.name} was slain by {ev.TargetEntity}.");
             Debug.Log($"Die call {ev.TimeCreated}, current time {Time.time}");
             entity.gameObject.SetActive(false);
         }

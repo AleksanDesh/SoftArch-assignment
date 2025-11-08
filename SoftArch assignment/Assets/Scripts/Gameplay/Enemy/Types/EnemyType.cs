@@ -1,9 +1,10 @@
+using DungeonCrawler.Gameplay.Stats.Rewards;
 using UnityEngine;
 
 namespace DungeonCrawler.Gameplay.Enemy.Types
 {
-    [CreateAssetMenu(menuName = "DungeonCrawler/Enemy/MeleeEnemyType", fileName = "NewMeleeEnemyType")]
-    public class MeleeEnemyType : ScriptableObject
+    [CreateAssetMenu(menuName = "DungeonCrawler/Enemy/EnemyType", fileName = "NewEnemyType")]
+    public class EnemyType : ScriptableObject
     {
         [Header("Movement")]
         public float MoveSpeed = 3.5f;

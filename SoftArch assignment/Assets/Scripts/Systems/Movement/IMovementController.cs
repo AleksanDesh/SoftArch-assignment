@@ -11,7 +11,7 @@ namespace DungeonCrawler.Systems.Movement
     public interface IMovementController
     {
         /// <summary>Initialize controller (pass owning entity & archetype data).</summary>
-        void Initialize(Entity owner, MeleeEnemyType archetype);
+        void Initialize(Entity owner, EnemyType archetype);
 
         /// <summary>Tell controller to move towards world position (may sample navmesh).</summary>
         void MoveTo(Vector3 worldPosition);

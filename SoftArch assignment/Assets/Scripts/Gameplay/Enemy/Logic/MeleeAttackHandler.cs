@@ -11,10 +11,10 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
     public class MeleeAttackHandler : MonoBehaviour, IAttackHandler
     {
         Entity _owner;
-        MeleeEnemyType _archetype;
+        EnemyType _archetype;
         float _cooldownTimer = 0f;
 
-        public void Initialize(Entity owner, MeleeEnemyType archetype)
+        public void Initialize(Entity owner, EnemyType archetype)
         {
             _owner = owner;
             _archetype = archetype;
@@ -28,7 +28,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
 
         public bool TryAttack(Entity target)
         {
-            if (_archetype == null || target == null) return false;
+            if (_archetype == null || target == null || !target.gameObject.activeInHierarchy) return false;
             if (_cooldownTimer > 0f) return false;
             Debug.Log("Using MeleeAttackHandler");
 

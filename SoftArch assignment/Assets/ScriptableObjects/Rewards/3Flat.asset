@@ -9,15 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e101897e91a394844806daaedef68364, type: 3}
-  m_Name: MeleeEnemyEasy
+  m_Script: {fileID: 11500000, guid: 32170029463e62d4e938c49adf3ff8a1, type: 3}
+  m_Name: 3Flat
   m_EditorClassIdentifier: 
-  MoveSpeed: 3.5
-  Acceleration: 8
-  StoppingDistance: 1
-  AggroRange: 10
-  AggroDuration: 3
-  AttackRange: 2
-  AttackCooldown: 1.2
-  AttackDamage: 111
-  SampleTargetPositionOnNavMesh: 1
+  Amount: 3

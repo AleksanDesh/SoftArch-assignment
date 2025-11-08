@@ -18,13 +18,14 @@
 //│  │  └─ Rules           // damage calculation, resistances, status effects
 //│  ├─ Items
 //│  │  └─ Data            // item templates (ScriptableObjects)
-//│  └─ Inventory
-//│     └─ Model           // Inventory model, item stacks, equip logic
+//│  ├─ Inventory
+//│  │  └─ Model           // Inventory model, item stacks, equip logic
+//│  └─ Stats              // Statistics for every creature
 //├─ Systems
 //│  ├─ Spawning           // SpawnManager, spawn points, spawn tables, spawn rules
 //│  ├─ AISystem           // AI tick orchestration for non-boss enemies
 //│  ├─ CombatSystem       // subscribes to attack events; resolves outcome via Combat.Rules
-//│  └─ GameFlow           // GameStateManager (MainMenu, Playing, Paused, GameOver)
+//│  └─ GameFlow           // GameStateManager (MainMenu, Playing, Paused, GameOver), and managers in general
 //├─ Levels
 //│  ├─ Scenes             // scene-specific data (level descriptor SOs), scene bootstrapper
 //│  └─ Runtime            // per-scene runtime helpers (spawn point registries, nav meshes)
