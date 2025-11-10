@@ -94,6 +94,9 @@ namespace DungeonCrawler.Core.Events
         }
     }
 
+    /// <summary>
+    /// Source is who died, target is who killed
+    /// </summary>
     public class DeathEvent : GameEvent
     {
         public int xp;
@@ -152,7 +155,7 @@ namespace DungeonCrawler.Core.Events
     }
     #endregion
 
-    #region EXP
+    #region XP
     // Fired when an entity gains experience.
     // SourceEntity = from (attacker, quest giver, etc.)
     // TargetEntity = to (player, pet)

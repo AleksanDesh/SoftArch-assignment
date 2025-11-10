@@ -14,6 +14,13 @@ namespace DungeonCrawler.Gameplay.Inventory.Model
         [Tooltip("How much unique items we can pick up per iteration")]
         public int MaxPerScan = 5;
 
+        Inventory inventory;
+        Entity entity;
+        private void Start()
+        {
+            inventory = GetComponent<Inventory>();
+            entity = GetComponent<Entity>();
+        }
         void Update()
         {
             // Optionally do this only on input or every N frames
@@ -22,25 +29,19 @@ namespace DungeonCrawler.Gameplay.Inventory.Model
             foreach (var c in hits)
             {
                 if (taken >= MaxPerScan) break;
-                var pickup = c.GetComponent<PickupItem>();
-                if (pickup == null) continue;
+                if (inventory == null) continue;
+                if (!c.TryGetComponent<PickupItem>(out var pickup)) continue;
 
-                // Attempt to pick up
-                var inv = GetComponent<Inventory>();
-                if (inv == null) continue;
-                int added = inv.Add(pickup.Item, pickup.Quantity);
-                if (added == pickup.Quantity)
-                {
-                    if (EventBus.Instance != null)
-                        EventBus.Instance.Enqueue(new ItemPickedEvent(GetComponent<Entity>(), pickup.GetComponent<Entity>(), pickup.Item, added));
-                    Destroy(pickup.gameObject);
-                }
-                else if (added > 0)
-                {
-                    if (EventBus.Instance != null)
-                        EventBus.Instance.Enqueue(new ItemPickedEvent(GetComponent<Entity>(), pickup.GetComponent<Entity>(), pickup.Item, added));
-                    pickup.Quantity -= added;
-                }
+                int wanted = pickup.Quantity;
+                if (wanted <= 0) continue;
+
+
+                int added = inventory.Add(pickup.Item, wanted);
+                if (added <= 0) continue;
+
+                int removed = pickup.TryTake(added);
+                if (EventBus.Instance != null)
+                    EventBus.Instance.Enqueue(new ItemPickedEvent(entity, pickup.GetComponent<Entity>(), pickup.Item, removed));
                 taken++;
             }
         }

@@ -9,15 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e101897e91a394844806daaedef68364, type: 3}
-  m_Name: MeleeEnemyEasy
+  m_Script: {fileID: 11500000, guid: b51b24ef16cbd774da7628f6a6fffbcf, type: 3}
+  m_Name: TestLootTable
   m_EditorClassIdentifier: 
-  MoveSpeed: 3.5
-  Acceleration: 8
-  StoppingDistance: 1
-  AggroRange: 15
-  AggroDuration: 3
-  AttackRange: 2
-  AttackCooldown: 1.2
-  AttackDamage: 111
-  SampleTargetPositionOnNavMesh: 1
+  Entries:
+  - Item: {fileID: 11400000, guid: d65f9d7183ffe564eb7dcef80ce4490f, type: 2}
+    Chance: 1
+    MinQuantity: 1
+    MaxQuantity: 3
+  Rolls: 1

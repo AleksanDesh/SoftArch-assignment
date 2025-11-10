@@ -32,14 +32,13 @@ namespace DungeonCrawler.Systems.CombatSystem
             {
                 if (EventBus.Instance != null)
                 {
-                    Debug.Log("Sending experience gain event to " + ev.TargetEntity.name);
+                    //Debug.Log("Sending experience gain event to " + ev.TargetEntity.name);
                     EventBus.Instance.Enqueue(new ExperienceGainedEvent(ev.TargetEntity, ev.xp, ev.SourceEntity));
                 }
             }
 
-
             Debug.Log($"{entity.name} was slain by {ev.TargetEntity}.");
-            Debug.Log($"Die call {ev.TimeCreated}, current time {Time.time}");
+            //Debug.Log($"Die call {ev.TimeCreated}, current time {Time.time}");
             entity.gameObject.SetActive(false);
         }
     }

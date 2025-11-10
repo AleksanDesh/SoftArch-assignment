@@ -9,7 +9,8 @@ namespace DungeonCrawler.Core.Events
         public static EventBus Instance { get; private set; }
 
         // Subscriptions: event type -> list of delegates
-        readonly Dictionary<Type, List<Delegate>> _subscribers = new Dictionary<Type, List<Delegate>>();
+        //readonly Dictionary<Type, List<Delegate>> _subscribers = new Dictionary<Type, List<Delegate>>();
+        readonly Dictionary<Type, List<(Delegate typedHandler, Action<GameEvent> adapter)>> _subscribers = new Dictionary<Type, List<(Delegate, Action<GameEvent>)>>();
 
         // Processing queues
         readonly Queue<GameEvent> _currentQueue = new Queue<GameEvent>();
@@ -53,7 +54,7 @@ namespace DungeonCrawler.Core.Events
                 if (ev.Consumed) break;
                 try
                 {
-                    handlers[i].DynamicInvoke(ev);
+                    handlers[i].adapter(ev);
                 }
                 catch (Exception ex)
                 {
@@ -79,20 +80,35 @@ namespace DungeonCrawler.Core.Events
         // Strongly-typed subscribe/unsubscribe
         public void Subscribe<T>(Action<T> handler) where T : GameEvent
         {
+            if (handler == null) return;
             var type = typeof(T);
+
+            Action<GameEvent> wrapper = ev =>
+            {
+                if (ev is T te) handler(te);
+            };
+
             if (!_subscribers.TryGetValue(type, out var list))
             {
-                list = new List<Delegate>();
+                list = new List<(Delegate, Action<GameEvent>)>();
                 _subscribers[type] = list;
             }
-            list.Add(handler);
+            list.Add((handler, wrapper));
         }
 
         public void Unsubscribe<T>(Action<T> handler) where T : GameEvent
         {
+            if (handler == null) return;
             var type = typeof(T);
             if (!_subscribers.TryGetValue(type, out var list)) return;
-            list.Remove(handler);
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                if (Delegate.Equals(list[i].typedHandler, handler))
+                {
+                    list.RemoveAt(i);
+                    break;
+                }
+            }
             if (list.Count == 0) _subscribers.Remove(type);
         }
     }

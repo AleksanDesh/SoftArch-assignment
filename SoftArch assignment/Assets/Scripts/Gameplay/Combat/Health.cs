@@ -16,6 +16,8 @@ namespace DungeonCrawler.Gameplay.Combat
 
         Entity _entity;
 
+        public bool godMode = false;
+
         void Start()
         {
             _entity = GetComponent<Entity>();
@@ -24,7 +26,7 @@ namespace DungeonCrawler.Gameplay.Combat
 
         public void ApplyDamage(int amount, Entity damager)
         {
-            if (amount <= 0) return;
+            if (amount <= 0 || godMode) return;
             CurrentHP -= amount;
             Debug.Log($"{name} took {amount} damage from {damager.name}. HP: {CurrentHP}/{MaxHP}");
 
