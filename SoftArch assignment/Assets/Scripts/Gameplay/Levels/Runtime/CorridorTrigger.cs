@@ -1,3 +1,4 @@
+using DungeonCrawler.Core.Utils;
 using UnityEngine;
 
 namespace DungeonCrawler.Levels.Runtime
@@ -11,9 +12,6 @@ namespace DungeonCrawler.Levels.Runtime
     {
         [Tooltip("Tag of the player GameObject or leave empty to use EntityManager lookup.")]
         public string PlayerTag = "Player";
-
-        [Tooltip("Optional: which door set to close on trigger (useful if the corridor belongs to a specific room)")]
-        public Room RoomToAffect;
 
         DungeonManager dm;
 
@@ -32,19 +30,8 @@ namespace DungeonCrawler.Levels.Runtime
         // Change this later to something suiting, or leave as is, should work
         void OnTriggerEnter(Collider other)
         {
-            // Prefer Entity presence check if you have an Entity component
-            var ent = other.GetComponentInParent<Core.Utils.Entity>();
-            if (ent == null)
-            {
-                if (!string.IsNullOrEmpty(PlayerTag) && other.gameObject.CompareTag(PlayerTag))
-                {
-                    // ok - continue
-                }
-                else return;
-            }
-
-            // Close doors immediately for the current room (if provided)
-            if (RoomToAffect != null) RoomToAffect.CloseAllExceptEntrance();
+            Entity ent = other.GetComponentInParent<Entity>();
+            if (ent.tag != PlayerTag) return;
 
             // Notify manager to transition
             dm.RequestRoomEntranceOpen(this);

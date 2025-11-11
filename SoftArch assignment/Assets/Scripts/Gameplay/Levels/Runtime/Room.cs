@@ -104,9 +104,6 @@ namespace DungeonCrawler.Levels.Runtime
             SubscribeDeath();
 
             if (SpawnOnActivate) SpawnEnemies();
-
-            if (entranceCoroutine != null) StopCoroutine(entranceCoroutine);
-            entranceCoroutine = StartCoroutine(EntranceTimer());
         }
 
         /// <summary>Deactivate room: cancel timers and unsubscribe</summary>
@@ -213,6 +210,9 @@ namespace DungeonCrawler.Levels.Runtime
             var d = Doors[0];
             if (d == null) return;
             if (DoorAnimator != null) DoorAnimator.OpenDoor(d); else SetDoorOpenFallback(d, true);
+
+            if (entranceCoroutine != null) StopCoroutine(entranceCoroutine);
+            entranceCoroutine = StartCoroutine(EntranceTimer());
         }
 
         void CloseEntrance()
@@ -291,17 +291,6 @@ namespace DungeonCrawler.Levels.Runtime
             if (player == null) return;
 
             player.GetComponent<KinematicCharacterMotor>().SetPosition(dest);
-        }
-
-
-        Vector3 ComputeDefaultFallbackPos()
-        {
-            if (Doors != null && Doors.Length > 0 && Doors[0] != null)
-            {
-                var d = Doors[0].transform;
-                return d.position - d.forward * 2f + Vector3.up * 0.1f;
-            }
-            return transform.position;
         }
 
         bool IsInsideRoom(Vector3 worldPos)

@@ -1,44 +1,69 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace DungeonCrawler.Levels.Runtime
 {
-    /// <summary>
-    /// Simple linear dungeon manager. Holds a list of room prefabs (or you can load them from scriptable LevelDescriptor).
-    /// Spawns the first room at start (or via StartAtIndex) and handles transitions requested by corridor triggers.
-    /// </summary>
-    [DefaultExecutionOrder(-200)]
     public class DungeonManager : MonoBehaviour
     {
+        [Tooltip("Room prefabs and corridor prefabs in alternating order (Room, Corridor, Room, Corridor, etc).")]
+        public GameObject[] SequencePrefabs;
 
-        [Tooltip("Room prefabs, ordered by sequence in the dungeon")]
-        public GameObject[] RoomPrefabs;
-
-        [Tooltip("Parent used for instantiated rooms")]
+        [Tooltip("Parent used for instantiated rooms and corridors")]
         public Transform RoomsParent;
 
-        [Tooltip("Delay (seconds) between closing doors and actually loading next room")]
+        [Tooltip("Delay between door closing and spawning next set")]
         public float TransitionDelay = 0.8f;
 
         int _currentIndex = -1;
+
+        // Current active room
         Room _currentRoom;
         GameObject _currentRoomGO;
 
+        // Currently active corridor between rooms
+        GameObject _currentCorridorGO;
 
-        // room that was spawned as the "next" while waiting for players to enter
+        // Pending next room (spawned but not yet entered)
         GameObject _pendingRoomGO;
         Room _pendingRoom;
 
         void Start()
         {
-            if (RoomPrefabs == null || RoomPrefabs.Length == 0) { Debug.LogWarning("DungeonManager: no RoomPrefabs assigned."); return; }
+            if (SequencePrefabs == null || SequencePrefabs.Length == 0)
+            {
+                Debug.LogWarning("DungeonManager: No prefabs assigned.");
+                return;
+            }
+
             StartAt(0);
         }
 
+        public void StartAt(int index)
+        {
+            if (index < 0 || index >= SequencePrefabs.Length)
+            {
+                Debug.LogWarning("StartAt: invalid index");
+                return;
+            }
+
+            // Cleanup any existing content
+            if (_currentRoomGO != null)
+            {
+                _currentRoom?.Deactivate();
+                Destroy(_currentRoomGO);
+                _currentRoomGO = null;
+                _currentRoom = null;
+            }
+
+            _currentIndex = index;
+            SpawnRoomAtIndex(_currentIndex, out _currentRoomGO, out _currentRoom);
+            _currentRoom.Activate();
+            _currentRoom.OpenEntrance();
+        }
+
+        // Called by a corridor trigger when player enters corridor
         public void RequestRoomEntranceOpen(CorridorTrigger corridor)
         {
-            // Called when corridor detects player entry and wants to open the entrance of the next room
             if (_pendingRoom != null)
             {
                 Debug.Log($"DungeonManager: Opening entrance for next room {_pendingRoom.name}");
@@ -46,74 +71,70 @@ namespace DungeonCrawler.Levels.Runtime
             }
         }
 
+        // Called by room when all enemies are dead
         public void NotifyRoomCleared(Room clearedRoom)
         {
-            // ensure the cleared room is the current one
             if (clearedRoom == null || clearedRoom != _currentRoom)
                 return;
 
-            int nextIndex = _currentIndex + 1;
-            if (nextIndex >= RoomPrefabs.Length)
+            int corridorIndex = _currentIndex + 1;
+            int nextRoomIndex = _currentIndex + 2;
+
+            if (nextRoomIndex >= SequencePrefabs.Length)
             {
-                Debug.Log("DungeonManager: no next room (end of dungeon).");
+                Debug.Log("DungeonManager: Dungeon completed! No more rooms.");
                 return;
             }
 
-            // Spawn next room and keep both current and pending alive
-            var prefab = RoomPrefabs[nextIndex];
-            _pendingRoomGO = Instantiate(prefab, prefab.transform.position, prefab.transform.rotation, RoomsParent);
-            _pendingRoomGO.name = $"{prefab.name}_{nextIndex}";
-            _pendingRoom = _pendingRoomGO.GetComponent<Room>() ?? _pendingRoomGO.AddComponent<Room>();
+            // spawn the corridor first
+            if (corridorIndex < SequencePrefabs.Length)
+            {
+                var corridorPrefab = SequencePrefabs[corridorIndex];
+                _currentCorridorGO = Instantiate(corridorPrefab, RoomsParent);
+                _currentCorridorGO.name = $"{corridorPrefab.name}_{corridorIndex}";
+            }
 
-            // Activate next room (it is responsible for opening entrance, teleporting players,
-            // and eventually calling NotifyPlayersInside(this) when players are in)
+            // spawn the next room
+            SpawnRoomAtIndex(nextRoomIndex, out _pendingRoomGO, out _pendingRoom);
             _pendingRoom.Activate();
-
-            // Do nothing else — we wait until next room tells us players are inside.
         }
 
-        // Called by the (new) room when it has teleported players and confirmed they are inside.
-        public void NotifyPlayersInside(Room roomThatHasPlayersInside)
+        // Called by room when players are inside
+        public void NotifyPlayersInside(Room newRoom)
         {
-            // only act if this is the pending room we spawned
-            if (roomThatHasPlayersInside == null || roomThatHasPlayersInside != _pendingRoom)
+            if (newRoom == null || newRoom != _pendingRoom)
                 return;
 
-            // safe unload of the previous (old) room
+            Debug.Log($"DungeonManager: Players entered room {newRoom.name}");
+
+            // Unload last room and corridor
             if (_currentRoomGO != null)
             {
-                // ask room to clean up, then destroy
                 _currentRoom.Deactivate();
                 Destroy(_currentRoomGO);
             }
+            if (_currentCorridorGO != null)
+            {
+                Destroy(_currentCorridorGO);
+            }
 
-            // promote pending to current
+            // promote pending room to current
             _currentRoomGO = _pendingRoomGO;
             _currentRoom = _pendingRoom;
-            _currentIndex++;
+            _currentIndex += 2; // because we advanced by corridor + room
 
-            // clear pending
             _pendingRoomGO = null;
             _pendingRoom = null;
-
-            // optional: let others know a new room is fully entered (you can hook this up to EventBus if you want)
-            Debug.Log($"DungeonManager: players entered room {_currentRoomGO.name}");
         }
 
-        // Start dungeon at specific room index
-        public void StartAt(int index)
+        void SpawnRoomAtIndex(int index, out GameObject roomGO, out Room room)
         {
-            if (RoomPrefabs == null || index < 0 || index >= RoomPrefabs.Length) return;
-
-            // unload anything existing
-            if (_currentRoomGO != null) { _currentRoom.Deactivate(); Destroy(_currentRoomGO); _currentRoomGO = null; _currentRoom = null; }
-
-            _currentIndex = index;
-            var prefab = RoomPrefabs[_currentIndex];
-            _currentRoomGO = Instantiate(prefab, RoomsParent);
-            _currentRoomGO.name = $"{prefab.name}_{_currentIndex}";
-            _currentRoom = _currentRoomGO.GetComponent<Room>() ?? _currentRoomGO.AddComponent<Room>();
-            _currentRoom.Activate();
+            var prefab = SequencePrefabs[index];
+            roomGO = Instantiate(prefab, prefab.transform.position, prefab.transform.rotation, RoomsParent);
+            roomGO.name = $"{prefab.name}_{index}";
+            room = roomGO.GetComponent<Room>();
+            if (room == null)
+                room = roomGO.AddComponent<Room>();
         }
     }
 }
