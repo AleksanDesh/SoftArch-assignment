@@ -1,9 +1,10 @@
 using KinematicCharacterController;
 using KinematicCharacterController.Examples;
+using Mirror;
 using UnityEngine;
 namespace DungeonCrawler.Gameplay.Player.Controller
 {
-    public class PlayerInputManager : MonoBehaviour
+    public class PlayerInputManager : NetworkBehaviour
     {
         public MyCharacterController Character;
         public MyCharacterCamera CharacterCamera;
@@ -16,7 +17,11 @@ namespace DungeonCrawler.Gameplay.Player.Controller
 
         private void Start()
         {
-            Cursor.lockState = CursorLockMode.Locked;
+            if (!isLocalPlayer) return;
+
+            CharacterCamera = Camera.main.GetComponent<MyCharacterCamera>();
+
+                Cursor.lockState = CursorLockMode.Locked;
 
             // Tell camera to follow transform
             CharacterCamera.SetFollowTransform(Character.CameraFollowPoint);
@@ -28,10 +33,7 @@ namespace DungeonCrawler.Gameplay.Player.Controller
 
         private void Update()
         {
-            if (Input.GetMouseButtonDown(0))
-            {
-                Cursor.lockState = CursorLockMode.Locked;
-            }
+            if (!isLocalPlayer) return;
 
             if (Input.GetKeyDown(KeyCode.LeftControl))
             {
@@ -50,6 +52,7 @@ namespace DungeonCrawler.Gameplay.Player.Controller
 
         private void LateUpdate()
         {
+            if (!isLocalPlayer) return;
             // Handle rotating the camera along with physics movers
             if (CharacterCamera.RotateWithPhysicsMover && Character.Motor.AttachedRigidbody != null)
             {
@@ -104,5 +107,58 @@ namespace DungeonCrawler.Gameplay.Player.Controller
             // Apply inputs to character
             Character.SetInputs(ref characterInputs);
         }
+
+        #region NetworkResolving
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            if (!isLocalPlayer)
+            {
+                DisableForRemote();
+            }
+            else
+            {
+                EnableForLocal();
+            }
+        }
+
+        public override void OnStopClient()
+        {
+            base.OnStopClient();
+            if (!isLocalPlayer) DisableForRemote();
+        }
+
+        void DisableForRemote()
+        {
+            if (Character != null)
+            {
+                if (Character.Motor != null)
+                    Character.Motor.enabled = false;
+
+                Character.enabled = false;
+            }
+
+            if (CharacterCamera != null)
+                CharacterCamera.enabled = false;
+
+            enabled = false;
+        }
+
+        void EnableForLocal()
+        {
+            if (Character != null)
+            {
+                if (Character.Motor != null)
+                    Character.Motor.enabled = true;
+
+                Character.enabled = true;
+            }
+
+            if (CharacterCamera != null)
+                CharacterCamera.enabled = true;
+
+            enabled = true;
+        }
+        #endregion
     }
 }

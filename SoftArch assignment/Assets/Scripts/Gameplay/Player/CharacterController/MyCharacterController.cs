@@ -1,5 +1,6 @@
 using KinematicCharacterController;
 using KinematicCharacterController.Examples;
+using Mirror;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -39,7 +40,7 @@ namespace DungeonCrawler.Gameplay.Player.Controller
         TowardsGroundSlopeAndGravity,
     }
 
-    public class MyCharacterController : MonoBehaviour, ICharacterController
+    public class MyCharacterController : NetworkBehaviour, ICharacterController
     {
         public KinematicCharacterMotor Motor;
 
@@ -526,6 +527,40 @@ namespace DungeonCrawler.Gameplay.Player.Controller
 
         public void OnDiscreteCollisionDetected(Collider hitCollider)
         {
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            // When the object is spawned on a client, this runs.
+            if (!isLocalPlayer)
+            {
+                DisableForRemote();
+            }
+            else
+            {
+                EnableForLocal();
+            }
+        }
+
+        public override void OnStopClient()
+        {
+            base.OnStopClient();
+            // cleanup if needed
+            if (!isLocalPlayer) DisableForRemote();
+        }
+
+        void DisableForRemote()
+        {
+            // stop motor and controller logic for remote instances
+            if (Motor != null) Motor.enabled = false;
+            enabled = false;
+        }
+
+        void EnableForLocal()
+        {
+            if (Motor != null) Motor.enabled = true;
+            enabled = true;
         }
     }
 }

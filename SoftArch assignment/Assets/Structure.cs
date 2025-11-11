@@ -20,7 +20,9 @@
 //│  │  └─ Data            // item templates (ScriptableObjects)
 //│  ├─ Inventory
 //│  │  └─ Model           // Inventory model, item stacks, equip logic
-//│  └─ Stats              // Statistics for every creature
+//│  ├─  Stats             // Statistics for every creature
+//│  └─ Levels          
+//│  │  └─ Runtime         // Level runtime logic
 //├─ Systems
 //│  ├─ Spawning           // SpawnManager, spawn points, spawn tables, spawn rules
 //│  ├─ AISystem           // AI tick orchestration for non-boss enemies

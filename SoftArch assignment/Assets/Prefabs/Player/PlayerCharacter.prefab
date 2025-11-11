@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7027032785162155187}
   - component: {fileID: 8672246954004654376}
   - component: {fileID: 8101231062872801448}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Sphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -150,9 +150,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   userEntity: {fileID: 6442640806393639548}
-  layerMask:
-    serializedVersion: 2
-    m_Bits: 0
 --- !u!1 &1980852427795609963
 GameObject:
   m_ObjectHideFlags: 0
@@ -162,7 +159,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3875366975515310184}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: CameraPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -202,9 +199,12 @@ GameObject:
   - component: {fileID: 6670333100787253843}
   - component: {fileID: 1429700806229568710}
   - component: {fileID: 2369112444101062562}
-  m_Layer: 0
+  - component: {fileID: 5245316863805029537}
+  - component: {fileID: 8972682582421689147}
+  - component: {fileID: 5987086624918489912}
+  m_Layer: 3
   m_Name: PlayerCharacter
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -303,6 +303,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e126c7e2871c894f8b9e6ffdf6bbb31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   Motor: {fileID: 768108241928540418}
   MaxStableMoveSpeed: 10
   StableMovementSharpness: 15
@@ -351,7 +354,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MaxHP: 100
   CurrentHP: 100
-  godMode: 1
+  godMode: 0
 --- !u!114 &919940739480411724
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -415,6 +418,74 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Calculator: {fileID: 0}
   FallbackFlatAmount: 10
+--- !u!114 &5245316863805029537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4019402415187791383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d3b7fc1073a434faec731aad86c4b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  Character: {fileID: 4416837854724396368}
+  CharacterCamera: {fileID: 0}
+--- !u!114 &8972682582421689147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4019402415187791383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneId: 0
+  _assetId: 19449969
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &5987086624918489912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4019402415187791383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ff3ba0becae47b8b9381191598957c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncDirection: 1
+  syncMode: 0
+  syncInterval: 0
+  target: {fileID: 7865708048212290165}
+  syncPosition: 1
+  syncRotation: 1
+  syncScale: 0
+  onlySyncOnChange: 1
+  compressRotation: 1
+  interpolatePosition: 1
+  interpolateRotation: 1
+  interpolateScale: 1
+  coordinateSpace: 0
+  timelineOffset: 1
+  showGizmos: 0
+  showOverlay: 0
+  overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
+  onlySyncOnChangeCorrectionMultiplier: 2
+  useFixedUpdate: 0
+  rotationSensitivity: 0.01
+  positionPrecision: 0.01
+  scalePrecision: 0.01
 --- !u!1 &4171973818844865181
 GameObject:
   m_ObjectHideFlags: 0
@@ -426,7 +497,7 @@ GameObject:
   - component: {fileID: 3935599871901585387}
   - component: {fileID: 4726101585475113087}
   - component: {fileID: 6378965450445362347}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: PlayerMesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -513,7 +584,7 @@ GameObject:
   - component: {fileID: 1276935831100073103}
   - component: {fileID: 6165800162160029554}
   - component: {fileID: 3514857133602998587}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Cylinder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -597,7 +668,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5300308002012234879}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
