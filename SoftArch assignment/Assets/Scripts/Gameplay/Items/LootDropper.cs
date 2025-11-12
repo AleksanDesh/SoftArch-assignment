@@ -76,7 +76,7 @@ namespace DungeonCrawler.Gameplay.Items
                 Debug.LogWarning($"No pickup prefab for item {def?.ItemName}");
                 return;
             }
-            Debug.Log($"Spawning pickUpItem at position {pos}");
+            //Debug.Log($"Spawning pickUpItem at position {pos}");
             PickupItem.Spawn(prefab, def, qty, pos, Quaternion.identity);
             
         }

@@ -10,7 +10,6 @@ namespace DungeonCrawler.Levels.Runtime
     /// When the player enters, it requests a transition to the next room from DungeonManager.
     /// </summary>
     [RequireComponent(typeof(Collider))]
-    [RequireComponent(typeof(NetworkIdentity))]
     public class CorridorTrigger : NetworkBehaviour
     {
         [Tooltip("Tag of the player GameObject or leave empty to use EntityManager lookup.")]

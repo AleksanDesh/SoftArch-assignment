@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
 
@@ -6,25 +8,53 @@ public class CustomNetworkManager : NetworkManager
     // Assign in inspector or find at runtime
     public DungeonCrawler.Levels.Runtime.DungeonManager dungeonManager;
 
-
     public override void OnStartServer()
     {
         base.OnStartServer();
         if (dungeonManager == null) dungeonManager = Object.FindAnyObjectByType<DungeonCrawler.Levels.Runtime.DungeonManager>();
     }
-    public override void OnServerAddPlayer(NetworkConnectionToClient conn)
+
+    [Server]
+    public void SetActive(uint parentNetId, string relativePath, bool state)
     {
-        // default behavior (adds player object)
-        base.OnServerAddPlayer(conn);
+        if (!NetworkServer.active)
+            return;
 
-        // make sure we have dungeon manager ref
-        if (dungeonManager == null) dungeonManager = Object.FindAnyObjectByType<DungeonCrawler.Levels.Runtime.DungeonManager>();
+        ApplyActiveState(parentNetId, relativePath, state); // apply locally on server
+        RpcSetActive(parentNetId, relativePath, state);      // replicate to clients
+    }
 
-        // send current dungeon state to the newly connected client
-        if (dungeonManager != null)
+    //[ClientRpc]
+    void RpcSetActive(uint parentNetId, string relativePath, bool state)
+    {
+        // apply on all clients
+        ApplyActiveState(parentNetId, relativePath, state);
+    }
+
+    void ApplyActiveState(uint parentNetId, string relativePath, bool state)
+    {
+        if (NetworkClient.spawned.TryGetValue(parentNetId, out var identity) && identity != null)
         {
-            dungeonManager.SendFullStateToClient(conn);
-            Debug.Log($"CustomNetworkManager: Sent dungeon full state to client {conn.connectionId}");
+            Transform target = identity.transform;
+
+            if (!string.IsNullOrEmpty(relativePath))
+            {
+                target = identity.transform.Find(relativePath);
+                if (target == null)
+                {
+                    Debug.LogWarning($"[ApplyActiveState] Could not find path '{relativePath}' under '{identity.name}'");
+                    return;
+                }
+            }
+
+            if (target != null && target.gameObject != null)
+            {
+                target.gameObject.SetActive(state);
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[ApplyActiveState] Could not find NetworkIdentity with netId={parentNetId} passed relativePath {relativePath}");
         }
     }
 }

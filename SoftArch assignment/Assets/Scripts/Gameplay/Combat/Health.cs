@@ -2,6 +2,7 @@ using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Utils;
 using DungeonCrawler.Gameplay.Stats;
 using DungeonCrawler.Gameplay.Stats.Rewards;
+using Mirror;
 using UnityEngine;
 
 namespace DungeonCrawler.Gameplay.Combat
@@ -9,9 +10,10 @@ namespace DungeonCrawler.Gameplay.Combat
     [RequireComponent(typeof(Entity))]
     [RequireComponent(typeof(ActorStats))]
     [RequireComponent(typeof(XpRewardSource))]
-    public class Health : MonoBehaviour
+    public class Health : NetworkBehaviour
     {
         public int MaxHP = 50;
+        [SyncVar]
         public int CurrentHP;
 
         Entity _entity;
@@ -24,6 +26,7 @@ namespace DungeonCrawler.Gameplay.Combat
             CurrentHP = MaxHP;
         }
 
+        [ServerCallback]
         public void ApplyDamage(int amount, Entity damager)
         {
             if (amount <= 0 || godMode) return;

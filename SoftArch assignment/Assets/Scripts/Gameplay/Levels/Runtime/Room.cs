@@ -3,6 +3,7 @@ using DungeonCrawler.Core.Utils;
 using DungeonCrawler.Gameplay.Enemy.Logic;
 using KinematicCharacterController;
 using Mirror;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -19,9 +20,6 @@ namespace DungeonCrawler.Levels.Runtime
     /// - on cleared: open all doors except entrance and notify DungeonManager (optional)
     /// </summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(NetworkIdentity))]
-    [RequireComponent(typeof(EnemySpawner))]
-    [RequireComponent(typeof(DoorAnimator))]
     public class Room : NetworkBehaviour
     {
         [Header("Doors (door 0 = entrance)")]
@@ -37,52 +35,46 @@ namespace DungeonCrawler.Levels.Runtime
         public Collider RoomBounds;
 
         [Header("Spawning")]
+        [Tooltip("Optional parent for spawned enemies")]
+        public Transform SpawnParent;
         public RoomSpawnPoint[] SpawnPoints;
-        public EnemySpawner Spawner;
         public bool SpawnOnActivate = true;
+
+        public string OpenTrigger = "Open";
+        public string CloseTrigger = "Close";
 
         // internal
         HashSet<int> spawnedEntityIds = new HashSet<int>();
         Coroutine entranceCoroutine;
         bool activated;
         DungeonManager dm;
-        DoorAnimator doorAnimator;
-
+        NetworkIdentity myIdentity;
 
         void Reset()
         {
             FindSpawnPoints();
-            Spawner = GetComponentInChildren<EnemySpawner>();
-            doorAnimator = GetComponent<DoorAnimator>();
         }
 
-        void Awake()
+        private void Awake()
         {
-            // Ensure NetworkIdentity exists at runtime
-            if (GetComponent<NetworkIdentity>() == null)
-                gameObject.AddComponent<NetworkIdentity>();
+            myIdentity = this.GetComponent<NetworkIdentity>();
         }
 
         void Start()
         {
-            dm = Object.FindFirstObjectByType<DungeonManager>();
+            dm = UnityEngine.Object.FindFirstObjectByType<DungeonManager>();
             if (SpawnPoints == null || SpawnPoints.Length == 0)
                 FindSpawnPoints();
 
             if (RoomBounds == null)
             {
-                // prefer an explicit trigger collider; fallback to any trigger found under children
                 foreach (var c in GetComponentsInChildren<Collider>())
                     if (c.isTrigger) { RoomBounds = c; break; }
             }
-
-            if (doorAnimator == null)
-                doorAnimator = GetComponentInChildren<DoorAnimator>();
         }
 
         void FindSpawnPoints()
         {
-            // Look for a child object named "SpawnPositions"
             var spawnParent = transform.Find("SpawnPositions");
             if (spawnParent != null)
             {
@@ -94,7 +86,6 @@ namespace DungeonCrawler.Levels.Runtime
                 }
             }
 
-            // fallback – get all in children if "SpawnPositions" doesn’t exist
             SpawnPoints = GetComponentsInChildren<RoomSpawnPoint>(includeInactive: true);
             if (SpawnPoints.Length > 0)
                 Debug.Log($"{name}: Found {SpawnPoints.Length} spawn points (fallback).");
@@ -107,33 +98,20 @@ namespace DungeonCrawler.Levels.Runtime
             UnsubscribeDeath();
         }
 
-        /// <summary>Activate room: open entrance, spawn enemies, start close-timer.
-        /// MUST BE CALLED ONLY FROM SERVER SIDE!
-        /// </summary>
         public void Activate()
         {
             if (activated) return;
             activated = true;
-
-            // Subscribe to death events
             SubscribeDeath();
-
-            // Spawn on next frame to ensure Room.Start() and other initialisation ran
-            // (prevents races where SpawnPoints/Spawner hasn't yet been discovered)
             StartCoroutine(ActivateNextFrame());
         }
 
         IEnumerator ActivateNextFrame()
         {
-            yield return null; // wait one frame
-
+            yield return null;
             if (SpawnOnActivate) SpawnEnemies();
-
-            // Open entrance after spawn (don't do it here)
-            // OpenEntrance();
         }
 
-        /// <summary>Deactivate room: cancel timers and unsubscribe</summary>
         public void Deactivate()
         {
             if (!activated) return;
@@ -145,19 +123,13 @@ namespace DungeonCrawler.Levels.Runtime
         IEnumerator EntranceTimer()
         {
             yield return new WaitForSeconds(Mathf.Max(0f, EntranceOpenDuration));
-
             if (TeleportPlayersOnClose) TeleportPlayersNotInside();
             CloseEntrance();
-
             entranceCoroutine = null;
         }
 
-        // --- Spawning & tracking ------------------------------------------------
-
         public void SpawnEnemies()
         {
-                var sp = Spawner ?? GetComponentInChildren<EnemySpawner>();
-            if (sp == null) { Debug.LogWarning($"{name}: No EnemySpawner found."); return; }
             if (SpawnPoints == null || SpawnPoints.Length == 0) FindSpawnPoints();
 
             spawnedEntityIds.Clear();
@@ -168,7 +140,6 @@ namespace DungeonCrawler.Levels.Runtime
             {
                 if (spoint == null || spoint.GetPrefab() == null || spoint.Quantity <= 0) continue;
 
-                // Verify prefab is registered in NetworkManager.spawnPrefabs
                 var prefab = spoint.GetPrefab();
                 if (NetworkManager.singleton != null && !NetworkManager.singleton.spawnPrefabs.Contains(prefab))
                 {
@@ -178,10 +149,8 @@ namespace DungeonCrawler.Levels.Runtime
                 var positions = new List<Vector3>(spoint.Quantity);
                 for (int i = 0; i < spoint.Quantity; i++) positions.Add(spoint.GetSpawnPosition());
 
-                var spawned = sp.SpawnMany(prefab, positions);
+                var spawned = SpawnMany(prefab, positions);
                 if (spawned == null) continue;
-
-                Debug.Log($"{name}: Spawned {spawned.Count} instances of {prefab.name}.");
 
                 foreach (var go in spawned)
                 {
@@ -193,16 +162,9 @@ namespace DungeonCrawler.Levels.Runtime
 
             if (spawnedEntityIds.Count == 0)
             {
-                //Debug.Log($"{name}: No enemies spawned — marking room cleared.");
                 RoomCleared();
             }
-            else
-            {
-                //Debug.Log($"{name}: SpawnedEntityIds count = {spawnedEntityIds.Count}");
-            }
         }
-
-        // --- DeathEvent handler -------------------------------------------------
 
         void SubscribeDeath()
         {
@@ -220,57 +182,47 @@ namespace DungeonCrawler.Levels.Runtime
             }
         }
 
-
         void OnDeathEvent(DeathEvent ev)
         {
             if (ev == null || ev.SourceEntity == null) return;
-
             int deadId = ev.SourceEntity.Id;
-            // only remove if it belonged to this room
             if (spawnedEntityIds.Remove(deadId))
             {
-                // immediate room-clear check
-                if (spawnedEntityIds.Count == 0)
-                {
-                    RoomCleared();
-                }
+                if (spawnedEntityIds.Count == 0) RoomCleared();
             }
         }
 
         void RoomCleared()
         {
-            if (dm != null)
-                dm.NotifyRoomCleared(this);
-            else
-                Debug.LogWarning("Dungeon Manager wasn't found. Ensure there is only one Dm in the scene. Or the room didn't spawn enemies");
+            if (dm != null) dm.NotifyRoomCleared(this);
+            else Debug.LogWarning("Dungeon Manager wasn't found. Ensure there is only one Dm in the scene. Or the room didn't spawn enemies");
 
-            // Open all doors except entrance (index 0)
+            Debug.Log($"Room {this.name} was cleared, opening all exits");
             OpenAllExceptEntrance();
-
             UnsubscribeDeath();
         }
 
-        // --- Door helpers ------------------------------------------------------
         [Server]
         public void OpenEntrance()
         {
             if (Doors == null || Doors.Length == 0) return;
             var d = Doors[0];
             if (d == null) return;
-            doorAnimator.OpenDoor(d);
-
+            OpenDoor(0);
             if (entranceCoroutine != null) StopCoroutine(entranceCoroutine);
             entranceCoroutine = StartCoroutine(EntranceTimer());
         }
 
+        [Server]
         void CloseEntrance()
         {
             if (Doors == null || Doors.Length == 0) return;
             var d = Doors[0];
             if (d == null) return;
-            doorAnimator.CloseDoor(d);
+            CloseDoor(0);
         }
 
+        [Server]
         public void CloseAllExceptEntrance()
         {
             if (Doors == null) return;
@@ -278,10 +230,11 @@ namespace DungeonCrawler.Levels.Runtime
             {
                 var d = Doors[i];
                 if (d == null) continue;
-                doorAnimator.CloseDoor(d);
+                CloseDoor(i);
             }
         }
 
+        [Server]
         public void OpenAllExceptEntrance()
         {
             if (Doors == null) return;
@@ -289,10 +242,9 @@ namespace DungeonCrawler.Levels.Runtime
             {
                 var d = Doors[i];
                 if (d == null) continue;
-               doorAnimator.OpenDoor(d);
+                OpenDoor(i);
             }
         }
-
 
         void TeleportPlayersNotInside()
         {
@@ -311,7 +263,6 @@ namespace DungeonCrawler.Levels.Runtime
             var dest = EntranceFallbackPoint.position;
             var teleported = 0;
 
-            // iterate all connected players on server (authoritative)
             foreach (var kv in NetworkServer.connections)
             {
                 var conn = kv.Value;
@@ -320,28 +271,19 @@ namespace DungeonCrawler.Levels.Runtime
                 var playerGO = conn.identity.gameObject;
                 if (playerGO == null) continue;
 
-                // if player is inside, skip
-                //Debug.LogWarning($"{IsPlayerInside(playerGO)} inside bounds player {playerGO.name}");
-                if (IsPlayerInside(playerGO))
-                    continue;
+                if (IsPlayerInside(playerGO)) continue;
 
-                // teleport player
                 var playerNet = conn.identity.GetComponent<PlayerNet>();
                 if (playerNet != null)
                     playerNet.TargetTeleport(conn, dest);
-               
-                //Debug.LogWarning($"Teleporting player {playerGO.name} netId={conn.identity.netId}");
+
                 teleported++;
             }
-
-            //Debug.Log($"{name}: Teleported {teleported} players to fallback.");
 
             if (dm != null) dm.NotifyPlayersInside(this);
             else Debug.LogWarning("Dungeon Manager wasn't found. Ensure there is only one Dm in the scene");
         }
 
-
-        // checks using collider bounds intersection
         bool IsPlayerInside(GameObject player)
         {
             if (player == null) return false;
@@ -350,10 +292,8 @@ namespace DungeonCrawler.Levels.Runtime
 
             if (RoomBounds != null)
             {
-                // quick point containment test (more reliable across network)
                 if (RoomBounds.bounds.Contains(p)) return true;
 
-                // optional: also try colliders intersection if you really want
                 var playerCols = player.GetComponentsInChildren<Collider>();
                 if (playerCols != null)
                 {
@@ -368,99 +308,132 @@ namespace DungeonCrawler.Levels.Runtime
             return false;
         }
 
+        public GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
+        {
+            if (prefab == null) return null;
+            GameObject go = Instantiate(prefab, position, rotation);
 
-        //// New ClientRpc: sent to all clients, but only the owning client will act on it
-        //[ClientRpc]
-        //void RpcTeleportPlayer(uint playerNetId, Vector3 dest)
-        //{
-        //    // Debug to confirm call on client
-        //    Debug.Log($"RpcTeleportPlayer received on client. playerNetId={playerNetId} myLocalNetId={(NetworkClient.connection != null && NetworkClient.connection.identity != null ? NetworkClient.connection.identity.netId : 0)} dest={dest}");
+            if (!NetworkServer.active)
+            {
+                Debug.LogError($"EnemySpawner.Spawn called but NetworkServer not active! prefab={prefab.name}");
+            }
 
-        //    // check if this client actually owns that netId
-        //    if (NetworkClient.connection == null || NetworkClient.connection.identity == null)
-        //    {
-        //        // no local player yet — nothing to do
-        //        return;
-        //    }
+            NetworkServer.Spawn(go);
 
-        //    if (NetworkClient.connection.identity.netId != playerNetId)
-        //    {
-        //        // not our player
-        //        return;
-        //    }
+            return go;
+        }
 
-        //    // This is our local player — teleport it
-        //    var go = NetworkClient.connection.identity.gameObject;
-        //    if (go == null)
-        //    {
-        //        Debug.LogWarning("RpcTeleportPlayer: local identity has no gameObject.");
-        //        return;
-        //    }
+        public List<GameObject> SpawnMany(GameObject prefab, IEnumerable<Vector3> positions)
+        {
+            var list = new List<GameObject>();
+            foreach (var p in positions)
+            {
+                var go = Spawn(prefab, p, Quaternion.identity);
+                if (go != null) list.Add(go);
+            }
+            return list;
+        }
 
-        //    var kcm = go.GetComponent<KinematicCharacterMotor>();
-        //    if (kcm != null)
-        //    {
-        //        kcm.SetPosition(dest);
-        //        Debug.Log($"RpcTeleportPlayer: teleported local player (KCM) to {dest}");
-        //        return;
-        //    }
+        #region Door logic
 
-        //    go.transform.position = dest;
-        //    Debug.Log($"RpcTeleportPlayer: teleported local player (transform) to {dest}");
-        //}
+        [Server]
+        public void OpenDoor(int index)
+        {
+            StartCoroutine(OpenEntranceNextFrame(index));
+        }
+        IEnumerator OpenEntranceNextFrame(int index)
+        {
+            yield return new WaitForEndOfFrame();
+            GameObject door = Doors[index];
+            Debug.Log($"{name}: observers count = {netIdentity.observers.Count}");
+            Debug.Log($"[Server] Calling RpcSetDoorState on {door.name} (room active={gameObject.activeSelf}, enabled={enabled}, netId={netIdentity?.netId})");
+            if (door == null) yield return null;
+            RpcSetDoorState(index, true);
 
-        //// Updated server-side TeleportPlayer: set server-side state and notify clients by netId
-        //void TeleportPlayer(GameObject player, Vector3 dest)
-        //{
-        //    if (player == null) return;
-        //    Debug.Log($"Trying to teleport player {player.name} to {dest}");
-        //    var ni = player.GetComponent<NetworkIdentity>();
-        //    if (ni != null && ni.connectionToClient != null)
-        //    {
-        //        // Server: set server-side position first (so host sees immediate update)
-        //        var kcmServer = player.GetComponent<KinematicCharacterMotor>();
-        //        if (kcmServer != null)
-        //        {
-        //            kcmServer.SetPosition(dest);
-        //        }
-        //        else
-        //        {
-        //            var ccServer = player.GetComponent<CharacterController>();
-        //            if (ccServer != null)
-        //            {
-        //                ccServer.enabled = false;
-        //                player.transform.position = dest;
-        //                ccServer.enabled = true;
-        //            }
-        //            else
-        //            {
-        //                player.transform.position = dest;
-        //            }
-        //        }
+            if (!isServer) yield return null;
+            if (myIdentity == null) myIdentity = GetComponentInParent<NetworkIdentity>();
+            if (myIdentity == null)
+            {
+                Debug.LogWarning($"{name}: No NetworkIdentity found — cannot sync door '{door.name}'. Applying locally only.");
+                yield return null;
+            }
+        }
 
-        //        Debug.Log($"TeleportPlayer (server): teleported server-side player netId={ni.netId} to {dest}");
+        [Server]
+        public void CloseDoor(int index)
+        {
+            GameObject door = Doors[index];
+            Debug.Log($"{name}: observers count = {netIdentity.observers.Count}");
+            Debug.Log($"[Server] Calling RpcSetDoorState on {door.name} (room active={gameObject.activeSelf}, enabled={enabled}, netId={netIdentity?.netId})");
+            if (door == null) return;
+            RpcSetDoorState(index, false);
 
-        //        // Notify clients — the owning client will apply the local teleport
-        //        RpcTeleportPlayer(ni.netId, dest);
-        //        return;
-        //    }
+            if (!isServer) return;
+            if (myIdentity == null) myIdentity = GetComponentInParent<NetworkIdentity>();
+            if (myIdentity == null)
+            {
+                Debug.LogWarning($"{name}: No NetworkIdentity found — cannot sync door '{door.name}'. Applying locally only.");
+                return;
+            }
+        }
+        [ClientRpc]
+        public void RpcSetDoorState(int index, bool open)
+        {
+            Debug.Log("RPC RECEIVED");
+            if (Doors == null || index < 0 || index >= Doors.Length)
+                return;
 
-        //    // fallback: non-networked or server-authoritative object — move on server
-        //    var kcm = player.GetComponent<KinematicCharacterMotor>();
-        //    if (kcm != null) { kcm.SetPosition(dest); return; }
-        //    player.transform.position = dest;
-        //}
+            if (open)
+                OpenDoorLocal(index);
+            else
+                CloseDoorLocal(index);
+        }
+
+
+        void OpenDoorLocal(int index)
+        {
+            GameObject door = Doors[index];
+            Debug.Log($"{name} Opening Door locally: {door?.name}");
+            if (door == null) return;
+
+            var animator = door.GetComponent<Animator>();
+            if (animator != null)
+            {
+                if (!door.activeInHierarchy) door.SetActive(true);
+                animator.ResetTrigger(CloseTrigger);
+                animator.SetTrigger(OpenTrigger);
+            }
+            else SetDoorActiveAndColliders(door, false);
+        }
+
+        void CloseDoorLocal(int index)
+        {
+            GameObject door = Doors[index];
+            if (door == null) return;
+            var animator = door.GetComponent<Animator>();
+            if (animator != null)
+            {
+                if (!door.activeInHierarchy) door.SetActive(true);
+                animator.ResetTrigger(OpenTrigger);
+                animator.SetTrigger(CloseTrigger);
+            }
+            else SetDoorActiveAndColliders(door, true);
+        }
+
+        void SetDoorActiveAndColliders(GameObject door, bool active)
+        {
+            door.SetActive(active);
+            var colliders = door.GetComponentsInChildren<Collider>(includeInactive: true);
+            foreach (var c in colliders) c.enabled = active;
+        }
+
+        #endregion
 
         #region NetworkResolving
         public override void OnStartClient()
         {
             base.OnStartClient();
-
-            // Disable on all clients except host
-            if (!isServer)
-            {
-                enabled = false;
-            }
+            if (!isServer) enabled = false;
         }
         #endregion
     }

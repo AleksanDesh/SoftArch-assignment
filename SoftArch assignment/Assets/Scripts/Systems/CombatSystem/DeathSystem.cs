@@ -1,5 +1,6 @@
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Utils;
+using Mirror;
 using UnityEngine;
 namespace DungeonCrawler.Systems.CombatSystem
 {
@@ -40,6 +41,11 @@ namespace DungeonCrawler.Systems.CombatSystem
             Debug.Log($"{entity.name} was slain by {ev.TargetEntity}.");
             //Debug.Log($"Die call {ev.TimeCreated}, current time {Time.time}");
             entity.gameObject.SetActive(false);
+            if (entity.gameObject.TryGetComponent<NetworkIdentity>(out var identity))
+            {
+                NetworkServer.UnSpawn(entity.gameObject);
+
+            }
         }
     }
 }
