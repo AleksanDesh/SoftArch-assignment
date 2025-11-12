@@ -37,7 +37,7 @@ namespace DungeonCrawler.Levels.Runtime
                 sequence[i] = RoomsParent.GetChild(i).gameObject;
             }
 
-            Debug.Log($"DungeonManager: Registered {sequence.Length} dungeon parts.");
+            //Debug.Log($"DungeonManager: Registered {sequence.Length} dungeon parts.");
         }
 
         [Server]
@@ -46,7 +46,7 @@ namespace DungeonCrawler.Levels.Runtime
             // Ensure everything initially disabled server-side (and notify any connected clients)
             for (int i = 0; i < sequence.Length; i++)
             {
-                Debug.Log($"Despawning sequence {i}");
+                //Debug.Log($"Despawning sequence {i}");
                 if (sequence[i] != null) SetActiveNetworkedByIndex(i, false);
             }
 
@@ -66,7 +66,7 @@ namespace DungeonCrawler.Levels.Runtime
             _currentRoom?.Activate();
             _currentRoom?.OpenEntrance();
 
-            Debug.Log($"DungeonManager: Started dungeon at {_currentRoomGO?.name}");
+            //Debug.Log($"DungeonManager: Started dungeon at {_currentRoomGO?.name}");
         }
 
         [Server]
@@ -74,7 +74,7 @@ namespace DungeonCrawler.Levels.Runtime
         {
             if (_pendingRoom != null)
             {
-                Debug.Log($"DungeonManager: Opening entrance for next room {_pendingRoom.name}");
+                //Debug.Log($"DungeonManager: Opening entrance for next room {_pendingRoom.name}");
                 _pendingRoom.OpenEntrance();
             }
         }
@@ -120,7 +120,7 @@ namespace DungeonCrawler.Levels.Runtime
             if (newRoom == null || newRoom != _pendingRoom)
                 return;
 
-            Debug.Log($"DungeonManager: Players entered room {newRoom.name}");
+            //Debug.Log($"DungeonManager: Players entered room {newRoom.name}");
 
             // Disable previous room & corridor (networked by index)
             if (_currentRoomGO != null)
@@ -175,7 +175,7 @@ namespace DungeonCrawler.Levels.Runtime
                 return;
             }
 
-            Debug.Log($"{name}: Dungeon Manager is starting on the server");
+            //Debug.Log($"{name}: Dungeon Manager is starting on the server");
             StartCoroutine(ActivateNextFrame());
         }
 

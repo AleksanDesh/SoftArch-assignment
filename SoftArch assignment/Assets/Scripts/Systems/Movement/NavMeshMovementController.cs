@@ -24,7 +24,7 @@ namespace DungeonCrawler.Systems.Movement
 
         public void Initialize(Entity owner, EnemyType archetype)
         {
-            Debug.Log("Using custom movement logic Melee");
+            //Debug.Log("Using custom movement logic Melee");
             _owner = owner;
             _archetype = archetype;
 

@@ -67,6 +67,15 @@ namespace DungeonCrawler.Core.Events
             Position = pos;
         }
     }
+
+    public class OpenTheDoor : GameEvent
+    {
+        public OpenTheDoor(Entity source, Entity target = null)
+            : base(source, target)
+        { 
+            
+        }
+    }
     #endregion
 
     #region Combat / traps

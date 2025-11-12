@@ -21,11 +21,11 @@ namespace DungeonCrawler.Levels.Runtime
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NetworkIdentity))]
     [RequireComponent(typeof(EnemySpawner))]
+    [RequireComponent(typeof(DoorAnimator))]
     public class Room : NetworkBehaviour
     {
         [Header("Doors (door 0 = entrance)")]
         public GameObject[] Doors;
-        public DoorAnimator DoorAnimator;
 
         [Header("Entrance")]
         public float EntranceOpenDuration = 5f;
@@ -46,13 +46,14 @@ namespace DungeonCrawler.Levels.Runtime
         Coroutine entranceCoroutine;
         bool activated;
         DungeonManager dm;
+        DoorAnimator doorAnimator;
 
 
         void Reset()
         {
             FindSpawnPoints();
             Spawner = GetComponentInChildren<EnemySpawner>();
-            DoorAnimator = GetComponentInChildren<DoorAnimator>();
+            doorAnimator = GetComponent<DoorAnimator>();
         }
 
         void Awake()
@@ -75,8 +76,8 @@ namespace DungeonCrawler.Levels.Runtime
                     if (c.isTrigger) { RoomBounds = c; break; }
             }
 
-            if (DoorAnimator == null)
-                DoorAnimator = GetComponentInChildren<DoorAnimator>();
+            if (doorAnimator == null)
+                doorAnimator = GetComponentInChildren<DoorAnimator>();
         }
 
         void FindSpawnPoints()
@@ -192,12 +193,12 @@ namespace DungeonCrawler.Levels.Runtime
 
             if (spawnedEntityIds.Count == 0)
             {
-                Debug.Log($"{name}: No enemies spawned — marking room cleared.");
+                //Debug.Log($"{name}: No enemies spawned — marking room cleared.");
                 RoomCleared();
             }
             else
             {
-                Debug.Log($"{name}: SpawnedEntityIds count = {spawnedEntityIds.Count}");
+                //Debug.Log($"{name}: SpawnedEntityIds count = {spawnedEntityIds.Count}");
             }
         }
 
@@ -206,14 +207,19 @@ namespace DungeonCrawler.Levels.Runtime
         void SubscribeDeath()
         {
             if (EventBus.Instance != null)
+            {
                 EventBus.Instance.Subscribe<DeathEvent>(OnDeathEvent);
+            }
         }
 
         void UnsubscribeDeath()
         {
             if (EventBus.Instance != null)
+            {
                 EventBus.Instance.Unsubscribe<DeathEvent>(OnDeathEvent);
+            }
         }
+
 
         void OnDeathEvent(DeathEvent ev)
         {
@@ -245,13 +251,13 @@ namespace DungeonCrawler.Levels.Runtime
         }
 
         // --- Door helpers ------------------------------------------------------
-
+        [Server]
         public void OpenEntrance()
         {
             if (Doors == null || Doors.Length == 0) return;
             var d = Doors[0];
             if (d == null) return;
-            if (DoorAnimator != null) DoorAnimator.OpenDoor(d); else SetDoorOpenFallback(d, true);
+            doorAnimator.OpenDoor(d);
 
             if (entranceCoroutine != null) StopCoroutine(entranceCoroutine);
             entranceCoroutine = StartCoroutine(EntranceTimer());
@@ -262,7 +268,7 @@ namespace DungeonCrawler.Levels.Runtime
             if (Doors == null || Doors.Length == 0) return;
             var d = Doors[0];
             if (d == null) return;
-            if (DoorAnimator != null) DoorAnimator.CloseDoor(d); else SetDoorOpenFallback(d, false);
+            doorAnimator.CloseDoor(d);
         }
 
         public void CloseAllExceptEntrance()
@@ -272,7 +278,7 @@ namespace DungeonCrawler.Levels.Runtime
             {
                 var d = Doors[i];
                 if (d == null) continue;
-                if (DoorAnimator != null) DoorAnimator.CloseDoor(d); else SetDoorOpenFallback(d, false);
+                doorAnimator.CloseDoor(d);
             }
         }
 
@@ -283,18 +289,10 @@ namespace DungeonCrawler.Levels.Runtime
             {
                 var d = Doors[i];
                 if (d == null) continue;
-                if (DoorAnimator != null) DoorAnimator.OpenDoor(d); else SetDoorOpenFallback(d, true);
+               doorAnimator.OpenDoor(d);
             }
         }
 
-        void SetDoorOpenFallback(GameObject door, bool open)
-        {
-            // fallback semantics: when open==true -> door disabled (passage clear)
-            if (door == null) return;
-            door.SetActive(!open);
-            var cols = door.GetComponentsInChildren<Collider>(includeInactive: true);
-            foreach (var c in cols) c.enabled = !open;
-        }
 
         void TeleportPlayersNotInside()
         {
@@ -323,7 +321,7 @@ namespace DungeonCrawler.Levels.Runtime
                 if (playerGO == null) continue;
 
                 // if player is inside, skip
-                Debug.LogWarning($"{IsPlayerInside(playerGO)} inside bounds player {playerGO.name}");
+                //Debug.LogWarning($"{IsPlayerInside(playerGO)} inside bounds player {playerGO.name}");
                 if (IsPlayerInside(playerGO))
                     continue;
 
@@ -332,11 +330,11 @@ namespace DungeonCrawler.Levels.Runtime
                 if (playerNet != null)
                     playerNet.TargetTeleport(conn, dest);
                
-                Debug.LogWarning($"Teleporting player {playerGO.name} netId={conn.identity.netId}");
+                //Debug.LogWarning($"Teleporting player {playerGO.name} netId={conn.identity.netId}");
                 teleported++;
             }
 
-            Debug.Log($"{name}: Teleported {teleported} players to fallback.");
+            //Debug.Log($"{name}: Teleported {teleported} players to fallback.");
 
             if (dm != null) dm.NotifyPlayersInside(this);
             else Debug.LogWarning("Dungeon Manager wasn't found. Ensure there is only one Dm in the scene");

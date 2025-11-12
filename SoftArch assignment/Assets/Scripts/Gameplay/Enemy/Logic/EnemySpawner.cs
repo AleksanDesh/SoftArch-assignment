@@ -26,7 +26,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
 
             NetworkServer.Spawn(go);
 
-            Debug.Log($"[EnemySpawner] Spawned prefab={prefab.name} netId={(go.GetComponent<NetworkIdentity>()?.netId ?? 0)}");
+            //Debug.Log($"[EnemySpawner] Spawned prefab={prefab.name} netId={(go.GetComponent<NetworkIdentity>()?.netId ?? 0)}");
 
             return go;
         }

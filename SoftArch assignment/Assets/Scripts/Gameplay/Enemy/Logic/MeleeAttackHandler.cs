@@ -30,7 +30,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
         {
             if (_archetype == null || target == null || !target.gameObject.activeInHierarchy) return false;
             if (_cooldownTimer > 0f) return false;
-            Debug.Log("Using MeleeAttackHandler");
+            //Debug.Log("Using MeleeAttackHandler");
 
             if (EventBus.Instance != null)
             {
@@ -40,7 +40,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             }
             else
             {
-                Debug.Log("I couldn't use the event bus");
+                Debug.LogWarning("I couldn't use the event bus");
                 // Fallback: direct Health application
                 var health = target.GetComponent<Health>();
                 if (health != null)

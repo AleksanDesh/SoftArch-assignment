@@ -42,7 +42,7 @@ namespace DungeonCrawler.Gameplay.Stats
             if (amount <= 0) return evs;
 
             var cfg = LevelConfig != null ? LevelConfig : fallbackConfig;
-            Debug.Log($"Experience received by {Entity.name} in amount: {amount}. I'll use config {cfg.name}");
+            //Debug.Log($"Experience received by {Entity.name} in amount: {amount}. I'll use config {cfg.name}");
             if (cfg == null)
             {
                 Debug.LogWarning($"{name}: No LevelConfig available when adding XP. XP ignored.");

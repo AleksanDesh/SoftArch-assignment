@@ -33,7 +33,7 @@ namespace DungeonCrawler.Systems.Stats
             if (actor == null) return;
 
             // Add experience (actor handles leveling math). It returns LevelUpEvent(s).
-            Debug.Log($"Level system sends experience to {ev.TargetEntity.name} from {ev.SourceEntity.name}");
+            //Debug.Log($"Level system sends experience to {ev.TargetEntity.name} from {ev.SourceEntity.name}");
             var lvlEvents = actor.AddExperience(ev.Amount, DefaultConfig);
 
             // Enqueue level up events (one per level gained)

@@ -1,3 +1,4 @@
+using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Utils;
 using Mirror;
 using UnityEngine;
@@ -9,6 +10,7 @@ namespace DungeonCrawler.Levels.Runtime
     /// When the player enters, it requests a transition to the next room from DungeonManager.
     /// </summary>
     [RequireComponent(typeof(Collider))]
+    [RequireComponent(typeof(NetworkIdentity))]
     public class CorridorTrigger : NetworkBehaviour
     {
         [Tooltip("Tag of the player GameObject or leave empty to use EntityManager lookup.")]
@@ -29,22 +31,15 @@ namespace DungeonCrawler.Levels.Runtime
 
 
         // Change this later to something suiting, or leave as is, should work
+        [ServerCallback]
         void OnTriggerEnter(Collider other)
         {
-            Entity ent = other.GetComponentInParent<Entity>();
-            if (ent.tag != PlayerTag) return;
-
-            // Notify manager to transition
-            dm.RequestRoomEntranceOpen(this);
+            var ent = other.GetComponentInParent<Entity>();
+            if (ent == null || ent.tag != PlayerTag) return;
+            this.GetComponent<Collider>().enabled = false;
+            //var ni = ent.GetComponent<NetworkIdentity>();
+            //if (ni == null || ni.connectionToClient == null) return;
+            dm?.RequestRoomEntranceOpen(this);
         }
-
-        #region NetworkResolving
-        public override void OnStartClient()
-        {
-            base.OnStartClient();
-            if (!isServer)
-                enabled = false;
-        }
-        #endregion
     }
 }

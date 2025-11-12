@@ -9,7 +9,7 @@ public class PlayerNet : NetworkBehaviour
     [TargetRpc]
     public void TargetTeleport(NetworkConnection target, Vector3 dest)
     {
-        Debug.Log($"PlayerNet.TargetTeleport received on client for {gameObject.name} -> {dest}");
+        //Debug.Log($"PlayerNet.TargetTeleport received on client for {gameObject.name} -> {dest}");
 
         var kcm = GetComponent<KinematicCharacterMotor>();
         if (kcm != null)
@@ -20,5 +20,12 @@ public class PlayerNet : NetworkBehaviour
 
         // fallback
         transform.position = dest;
+    }
+
+    [TargetRpc]
+    public void GameObjectSetActive(GameObject gm, bool state)
+    {
+        if (gm != null) 
+            gm.SetActive(state);
     }
 }
