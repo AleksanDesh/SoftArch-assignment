@@ -8,7 +8,7 @@ namespace DungeonCrawler.Systems.CombatSystem
         void Start()
         {
             EventBus.Instance.Subscribe<DeathEvent>(OnDeath);
-            Debug.Log("DeathEvent subscribe type = " + typeof(DeathEvent).FullName);
+            //Debug.Log("DeathEvent subscribe type = " + typeof(DeathEvent).FullName);
         }
 
         void OnDestroy()

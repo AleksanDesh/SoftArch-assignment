@@ -1,4 +1,5 @@
 using DungeonCrawler.Core.Utils;
+using Mirror;
 using UnityEngine;
 
 namespace DungeonCrawler.Levels.Runtime
@@ -8,7 +9,7 @@ namespace DungeonCrawler.Levels.Runtime
     /// When the player enters, it requests a transition to the next room from DungeonManager.
     /// </summary>
     [RequireComponent(typeof(Collider))]
-    public class CorridorTrigger : MonoBehaviour
+    public class CorridorTrigger : NetworkBehaviour
     {
         [Tooltip("Tag of the player GameObject or leave empty to use EntityManager lookup.")]
         public string PlayerTag = "Player";
@@ -36,5 +37,14 @@ namespace DungeonCrawler.Levels.Runtime
             // Notify manager to transition
             dm.RequestRoomEntranceOpen(this);
         }
+
+        #region NetworkResolving
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            if (!isServer)
+                enabled = false;
+        }
+        #endregion
     }
 }

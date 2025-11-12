@@ -28,7 +28,7 @@ namespace DungeonCrawler.Gameplay.Combat
         {
             if (amount <= 0 || godMode) return;
             CurrentHP -= amount;
-            Debug.Log($"{name} took {amount} damage from {damager.name}. HP: {CurrentHP}/{MaxHP}");
+            //Debug.Log($"{name} took {amount} damage from {damager.name}. HP: {CurrentHP}/{MaxHP}");
 
             if (CurrentHP <= 0)
             {

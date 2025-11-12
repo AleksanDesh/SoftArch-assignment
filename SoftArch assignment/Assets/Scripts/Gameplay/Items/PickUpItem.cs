@@ -26,7 +26,7 @@ namespace DungeonCrawler.Gameplay.Items
             }
 
             var go = Object.Instantiate(prefab, pos, rot);
-            go.SetActive(true);
+
             // ensure a PickupItem component exists
             var pickup = go.GetComponent<PickupItem>();
             if (pickup == null) pickup = go.AddComponent<PickupItem>();

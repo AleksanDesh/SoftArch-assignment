@@ -5,13 +5,14 @@ using DungeonCrawler.Systems.Movement;
 using DungeonCrawler.Systems.CombatSystem;
 using UnityEngine;
 using UnityEngine.AI;
+using Mirror;
 
 namespace DungeonCrawler.Gameplay.Enemy.Logic
 {
     [RequireComponent(typeof(Entity))]
     [RequireComponent(typeof(NavMeshAgent))]
     [RequireComponent(typeof(Health))]
-    public class EnemyAI : MonoBehaviour
+    public class EnemyAI : NetworkBehaviour
     {
         [Header("Targeting / Aggro")]
         [Tooltip("Which entity tag to consider 'player' (alternatively register player with EntityManager and set PlayerTag to empty).")]
@@ -253,5 +254,19 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, AttackRange);
         }
+
+
+        #region NetworkResolving
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+
+            // Disable on all clients except host
+            if (!isServer)
+            {
+                enabled = false;
+            }
+        }
+        #endregion
     }
 }

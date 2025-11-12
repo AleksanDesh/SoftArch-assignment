@@ -1,4 +1,5 @@
 using UnityEngine;
+using Mirror;
 
 namespace DungeonCrawler.Levels.Runtime
 {
@@ -12,7 +13,7 @@ namespace DungeonCrawler.Levels.Runtime
     /// Also toggles colliders when not using Animator.
     /// </summary>
     [DisallowMultipleComponent]
-    public class DoorAnimator : MonoBehaviour
+    public class DoorAnimator : NetworkBehaviour
     {
         [Tooltip("Animator trigger name used to open an animated door.")]
         public string OpenTrigger = "Open";
@@ -59,7 +60,8 @@ namespace DungeonCrawler.Levels.Runtime
 
         void SetDoorActiveAndColliders(GameObject door, bool active)
         {
-            // set active on the root door object (if the design expects children to be part of door, you may prefer enabling colliders only)
+            // set active on the root door object (if the design expects children to be part of door
+            // Make this on server as well.
             door.SetActive(active);
 
             // Also ensure colliders are enabled/disabled to match active state
