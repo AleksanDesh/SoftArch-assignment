@@ -27,6 +27,13 @@ namespace DungeonCrawler.Systems.CombatSystem
                 ev.Consumed = true;
                 return;
             }
+            Debug.Log($"{entity.name} was slain by {ev.TargetEntity}.");
+
+            if (entity.tag == "Player")
+            {
+                NetworkServer.UnSpawn(entity.gameObject);
+                return;
+            }
 
 
             if (ev.xp > 0 && ev.TargetEntity != null)
@@ -38,13 +45,13 @@ namespace DungeonCrawler.Systems.CombatSystem
                 }
             }
 
-            Debug.Log($"{entity.name} was slain by {ev.TargetEntity}.");
             //Debug.Log($"Die call {ev.TimeCreated}, current time {Time.time}");
             entity.gameObject.SetActive(false);
             if (entity.gameObject.TryGetComponent<NetworkIdentity>(out var identity))
             {
-                NetworkServer.UnSpawn(entity.gameObject);
-
+                //NetworkServer.UnSpawn(entity.gameObject);
+                NetworkServer.Destroy(entity.gameObject);
+                
             }
         }
     }

@@ -1,11 +1,14 @@
 using DungeonCrawler.Core.Utils;
 using DungeonCrawler.Gameplay.Combat;
 using DungeonCrawler.Gameplay.Enemy.Types;
-using DungeonCrawler.Systems.Movement;
 using DungeonCrawler.Systems.CombatSystem;
+using DungeonCrawler.Systems.Movement;
+using Mirror;
+using System.Collections;
+using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
-using Mirror;
 
 namespace DungeonCrawler.Gameplay.Enemy.Logic
 {
@@ -52,6 +55,164 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
         float _aggroTimer = 0f;
         float _attackTimer = 0f;
         bool stunned = false;
+        // ---------------------------
+        // Static player registry API
+        // ---------------------------
+        // All player Entities should register/unregister themselves
+        // This list is used by servers to target players; it's static so it scales across enemies.
+        public static readonly List<Entity> PlayerEntities = new List<Entity>();
+
+        #region Network
+        static int s_serverEnemyCount = 0;           // how many EnemyAI instances are running on server
+        static bool s_subscribedToNetEvents = false; // have we subscribed to NetworkServer events?
+        static EnemyAI s_coroutineRunner = null;     // a single instance used to run coroutines (first server EnemyAI)
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+
+            // track number of server-side EnemyAI instances so we subscribe/unsubscribe exactly once
+            s_serverEnemyCount++;
+
+            // choose first server EnemyAI as the coroutine runner
+            if (s_coroutineRunner == null)
+                s_coroutineRunner = this;
+
+            // subscribe once for server connection events
+            if (!s_subscribedToNetEvents)
+            {
+                NetworkServer.OnConnectedEvent += OnServerConnected;
+                NetworkServer.OnDisconnectedEvent += OnServerDisconnected;
+                s_subscribedToNetEvents = true;
+            }
+
+            // existing start logic (only server-side behavior remains valid)
+            _entity = GetComponent<Entity>();
+            _agent = GetComponent<NavMeshAgent>();
+            _agent.stoppingDistance = StoppingDistance;
+            // ... (keep other Start initialization here; omitted for brevity)
+        }
+
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
+
+            // decrement server instance count and unsubscribe if last enemy destroyed/disabled on server
+            s_serverEnemyCount--;
+            if (s_serverEnemyCount <= 0 && s_subscribedToNetEvents)
+            {
+                NetworkServer.OnConnectedEvent -= OnServerConnected;
+                NetworkServer.OnDisconnectedEvent -= OnServerDisconnected;
+                s_subscribedToNetEvents = false;
+                s_coroutineRunner = null;
+            }
+        }
+
+        void OnDestroy()
+        {
+            // ensure unsubscribe if object destroyed while server count reaches 0
+            if (isServer)
+                OnStopServer();
+        }
+
+        // Called when a connection arrives. The player's GameObject (connection.identity) may not yet be set,
+        // so we wait briefly (up to a timeout) for it to be created and then register the player's Entity.
+        static void OnServerConnected(NetworkConnectionToClient conn)
+        {
+            if (conn == null) return;
+
+            // if identity already exists, register immediately
+            if (conn.identity != null)
+            {
+                TryRegisterEntityFromIdentity(conn.identity);
+                return;
+            }
+
+            // otherwise we need to wait a frame or two until the player object is created.
+            // we rely on a server-side EnemyAI instance to run the coroutine. If none exists we skip —
+            // prefer registering from the player's OnStartServer for full reliability.
+            if (s_coroutineRunner != null)
+            {
+                s_coroutineRunner.StartCoroutine(s_coroutineRunner.WaitForIdentityAndRegister(conn));
+            }
+            else
+            {
+                Debug.LogWarning("[EnemyAI] No server EnemyAI instance available to wait for new player's identity. Consider registering players from player OnStartServer.");
+            }
+        }
+
+        // Called when a connection disconnects — remove any registered player entities associated with that connection.
+        static void OnServerDisconnected(NetworkConnectionToClient conn)
+        {
+            if (conn == null) return;
+
+            // If the identity still exists, unregister it quickly
+            if (conn.identity != null)
+            {
+                var ent = conn.identity.GetComponent<Entity>();
+                if (ent != null) UnregisterPlayer(ent);
+            }
+
+            // Further cleanup: remove any entries by connection match (safety)
+            PlayerEntities.RemoveAll(e =>
+            {
+                if (e == null) return true;
+                var nid = e.GetComponent<NetworkIdentity>();
+                return nid == null ? false : nid.connectionToClient == conn;
+            });
+        }
+
+        // Coroutine used to wait until the player's identity is assigned (or until timeout)
+        IEnumerator WaitForIdentityAndRegister(NetworkConnectionToClient conn)
+        {
+            const float timeout = 5f;
+            float elapsed = 0f;
+
+            while (elapsed < timeout)
+            {
+                if (conn == null) yield break;
+                if (conn.identity != null) break;
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            if (conn == null || conn.identity == null) yield break;
+
+            TryRegisterEntityFromIdentity(conn.identity);
+        }
+
+        static void TryRegisterEntityFromIdentity(NetworkIdentity nid)
+        {
+            if (nid == null) return;
+            var ent = nid.GetComponent<Entity>();
+            if (ent == null) return;
+
+            RegisterPlayer(ent);
+        }
+
+        public static void RegisterPlayer(Entity e)
+        {
+            if (e == null) return;
+            if (!PlayerEntities.Contains(e))
+            {
+                PlayerEntities.Add(e);
+                Debug.Log($"[EnemyAI] Registered player entity: {e.name}");
+            }
+        }
+
+        public static void UnregisterPlayer(Entity e)
+        {
+            if (e == null) return;
+            if (PlayerEntities.Contains(e))
+            {
+                PlayerEntities.Remove(e);
+                Debug.Log($"[EnemyAI] Unregistered player entity: {e.name}");
+            }
+        }
+
+        #endregion
+        // ---------------------------
+        // Enemy lifecycle
+        // ---------------------------
 
         void Start()
         {
@@ -59,10 +220,9 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             _agent = GetComponent<NavMeshAgent>();
             _agent.stoppingDistance = StoppingDistance;
 
-            // Apply archetype overrides if present
+            // Apply archetype overrides if present (kept from your original code)
             if (Archetype != null)
             {
-                // apply movement/combat overrides from archetype (keeps your public fields in inspector but uses archetype values)
                 AttackRange = Archetype.AttackRange;
                 AttackCooldown = Archetype.AttackCooldown;
                 AttackDamage = Archetype.AttackDamage;
@@ -70,13 +230,11 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
                 AggroDuration = Archetype.AggroDuration;
                 StoppingDistance = Archetype.StoppingDistance;
 
-                // update agent if present
                 _agent.speed = Archetype.MoveSpeed;
                 _agent.acceleration = Archetype.Acceleration;
                 _agent.stoppingDistance = StoppingDistance;
             }
 
-            // Ensure agent is on NavMesh (attempt to snap/warp if not)
             if (!_agent.isOnNavMesh)
             {
                 if (NavMesh.SamplePosition(transform.position, out var hit, 2.0f, NavMesh.AllAreas))
@@ -90,7 +248,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
                 }
             }
 
-            // Resolve modular components (prefer inspector-assigned components; else auto-detect)
+            // Resolve modular components (unchanged)
             if (MovementControllerComponent != null && MovementControllerComponent is IMovementController mc)
             {
                 _movementController = mc;
@@ -105,16 +263,17 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             if (AttackHandlerComponent != null && AttackHandlerComponent is IAttackHandler ah)
             {
                 _attackHandler = ah;
-                _attack_handler_initialize_safe(ah);
+                AttackHanlderInitialize(ah);
             }
             else
             {
-                _attack_handler_initialize_safe(GetComponent<IAttackHandler>()); // may be null
+                AttackHanlderInitialize(GetComponent<IAttackHandler>()); // may be null
             }
 
-            // try to find initial player via EntityManager; fallback to GameObject.FindWithTag later
-            // Idk why i'm making my life harder.
-            if (EntityManager.Instance != null)
+            // Try to find an initial player target:
+            // Prefer registered players list; fallback to EntityManager or tag lookup.
+            _target = GetClosestPlayerFromRegistry();
+            if (_target == null && EntityManager.Instance != null)
             {
                 _target = EntityManager.Instance.GetClosest(transform.position, PlayerTag);
             }
@@ -125,8 +284,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             }
         }
 
-        // helper to safely initialize attack handler
-        void _attack_handler_initialize_safe(IAttackHandler handler)
+        void AttackHanlderInitialize(IAttackHandler handler)
         {
             _attackHandler = handler;
             if (_attackHandler != null)
@@ -142,7 +300,17 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             if (_aggroTimer > 0f) _aggroTimer -= dt;
             if (_attackTimer > 0f) _attackTimer -= dt;
 
-            // Ensure we have a target reference; if we don't, try to acquire one
+            // Clean up any null entries in the static player list (players that disconnected/destroyed)
+            if (PlayerEntities.Count > 0)
+                PlayerEntities.RemoveAll(x => x == null);
+
+            // Acquire or refresh the closest player target from the registry if needed
+            if (_target == null || !PlayerEntities.Contains(_target))
+            {
+                _target = GetClosestPlayerFromRegistry();
+            }
+
+            // Fall back to your previous mechanisms if still no target
             if (_target == null)
             {
                 if (EntityManager.Instance != null)
@@ -160,19 +328,15 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             float distSqr = (_target.transform.position - transform.position).sqrMagnitude;
             bool inAggroRange = distSqr <= AggroRange * AggroRange;
 
-            // refresh or set aggro timer if player in range
             if (inAggroRange)
             {
                 _aggroTimer = AggroDuration;
             }
 
-            // if currently aggressive (timer > 0), chase
             if (_aggroTimer > 0f)
             {
-                // Movement: prefer modular movement controller
                 if (_movementController != null)
                 {
-                    // if not stunned, move; otherwise stop movement controller
                     if (!stunned)
                         _movementController.MoveTo(_target.transform.position);
                     else
@@ -180,11 +344,10 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
                 }
                 else
                 {
-                    // fallback: direct NavMeshAgent behavior (keeps previous behavior)
                     if (_agent.isOnNavMesh)
                     {
-                        if (!_agent.enabled) _agent.enabled = true;      // sanity
-                        if (!stunned && _agent.isStopped) _agent.isStopped = false;  // UNSTOP the agent
+                        if (!_agent.enabled) _agent.enabled = true;
+                        if (!stunned && _agent.isStopped) _agent.isStopped = false;
 
                         _agent.SetDestination(_target.transform.position);
                     }
@@ -194,7 +357,6 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
                     }
                 }
 
-                // Attack if in melee range (uses modular attack handler when available)
                 if (distSqr <= AttackRange * AttackRange && _attackTimer <= 0f)
                 {
                     bool attacked = false;
@@ -204,7 +366,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
                     }
                     else
                     {
-                        attacked = TryAttackTarget_Fallback();
+                        attacked = TryAttackTargetFallback();
                     }
 
                     if (attacked)
@@ -215,7 +377,6 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             }
             else
             {
-                // Not aggroed: stop moving
                 if (_movementController != null)
                 {
                     _movementController.Stop();
@@ -228,8 +389,32 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             }
         }
 
-        // fallback direct attack logic
-        bool TryAttackTarget_Fallback()
+        // Returns the closest registered player Entity or null if none
+        Entity GetClosestPlayerFromRegistry()
+        {
+            if (PlayerEntities.Count == 0) return null;
+
+            Entity best = null;
+            float bestSqr = float.MaxValue;
+            Vector3 pos = transform.position;
+
+            for (int i = 0; i < PlayerEntities.Count; i++)
+            {
+                var p = PlayerEntities[i];
+                if (p == null) continue; // cleaned periodically anyway
+                float d = (p.transform.position - pos).sqrMagnitude;
+                if (d < bestSqr)
+                {
+                    bestSqr = d;
+                    best = p;
+                }
+            }
+
+            return best;
+        }
+
+        // fallback direct attack logic (unchanged)
+        bool TryAttackTargetFallback()
         {
             if (_target == null) return false;
             Debug.Log("Fallback attack");
@@ -254,7 +439,6 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, AttackRange);
         }
-
 
         #region NetworkResolving
         public override void OnStartClient()

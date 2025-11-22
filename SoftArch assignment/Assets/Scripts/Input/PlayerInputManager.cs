@@ -19,6 +19,8 @@ namespace DungeonCrawler.Gameplay.Player.Controller
         {
             if (!isLocalPlayer) return;
 
+            GameManager.Instance.localPlayer = this.gameObject;
+
             CharacterCamera = Camera.main.GetComponent<MyCharacterCamera>();
 
                 Cursor.lockState = CursorLockMode.Locked;
@@ -38,13 +40,6 @@ namespace DungeonCrawler.Gameplay.Player.Controller
             if (Input.GetKeyDown(KeyCode.LeftControl))
             {
                 Character.SwitchOrientationMethod();
-            }
-
-            if (Input.GetKeyDown(KeyCode.LeftAlt))
-            {
-                Cursor.lockState = Cursor.lockState == CursorLockMode.None ? CursorLockMode.Locked : CursorLockMode.None;
-
-                Cursor.visible = (Cursor.lockState == CursorLockMode.None);
             }
 
             HandleCharacterInput();

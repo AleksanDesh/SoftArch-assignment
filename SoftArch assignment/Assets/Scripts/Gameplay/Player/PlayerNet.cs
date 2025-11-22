@@ -1,9 +1,33 @@
+using DungeonCrawler.Core.Utils;
+using DungeonCrawler.Gameplay.Enemy.Logic;
 using KinematicCharacterController;
 using Mirror;
 using UnityEngine;
 
 public class PlayerNet : NetworkBehaviour
 {
+    //Entity _entity;
+    //public override void OnStartServer()
+    //{
+    //    base.OnStartServer();
+    //    _entity = this.gameObject.GetComponent<Entity>();
+    //    if (_entity != null)
+    //    {
+    //        EnemyAI.RegisterPlayer(_entity);
+    //        // EntityManager.Instance?.Register(_entity);
+    //    }
+    //}
+
+    //public override void OnStopServer()
+    //{
+    //    base.OnStopServer();
+    //    if (_entity == null) _entity = this.gameObject.GetComponent<Entity>();
+    //    if (_entity != null)
+    //    {
+    //        EnemyAI.UnregisterPlayer(_entity);
+    //        // EntityManager.Instance?.Unregister(_entity);
+    //    }
+    //}
     // Called on server: TargetTeleport(conn, dest)
     // Runs on the target client.
     [TargetRpc]

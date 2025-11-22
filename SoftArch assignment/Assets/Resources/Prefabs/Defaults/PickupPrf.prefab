@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5492135446169591301}
   - component: {fileID: 196799981316170824}
   - component: {fileID: 2415043579193422421}
+  - component: {fileID: -5583813011236738509}
   m_Layer: 0
   m_Name: PickupPrf
   m_TagString: Untagged
@@ -108,3 +109,20 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-5583813011236738509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2994517392791996967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneId: 0
+  _assetId: 3104421118
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0

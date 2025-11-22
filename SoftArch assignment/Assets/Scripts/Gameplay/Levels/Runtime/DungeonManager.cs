@@ -154,7 +154,10 @@ namespace DungeonCrawler.Levels.Runtime
             }
 
             var prefab = RoomPrefabs[index];
-            GameObject instance = Instantiate(prefab, prefab.transform.position + Offset.position, prefab.transform.rotation);
+            var position = prefab.transform.position;
+            if (Offset != null)
+                position += Offset.position;
+            GameObject instance = Instantiate(prefab, position, prefab.transform.rotation);
 
             NetworkServer.Spawn(instance);
 

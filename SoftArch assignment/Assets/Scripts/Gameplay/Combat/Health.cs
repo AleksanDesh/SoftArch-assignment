@@ -26,6 +26,12 @@ namespace DungeonCrawler.Gameplay.Combat
             CurrentHP = MaxHP;
         }
 
+        [Server]
+        public void RestoreHp()
+        {
+            CurrentHP = MaxHP;
+        }
+
         [ServerCallback]
         public void ApplyDamage(int amount, Entity damager)
         {
