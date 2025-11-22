@@ -15,11 +15,11 @@ namespace DungeonCrawler.Levels.Runtime
         [Tooltip("Tag of the player GameObject or leave empty to use EntityManager lookup.")]
         public string PlayerTag = "Player";
 
-        DungeonManager dm;
+        DungeonManager _dm;
 
         private void Start()
         {
-            dm = Object.FindFirstObjectByType<DungeonManager>();
+            _dm = Object.FindFirstObjectByType<DungeonManager>();
         }
 
         void Reset()
@@ -38,7 +38,7 @@ namespace DungeonCrawler.Levels.Runtime
             this.GetComponent<Collider>().enabled = false;
             //var ni = ent.GetComponent<NetworkIdentity>();
             //if (ni == null || ni.connectionToClient == null) return;
-            dm?.RequestRoomEntranceOpen(this);
+            _dm?.RequestRoomEntranceOpen(this);
         }
     }
 }

@@ -167,6 +167,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93b79402ca56a754985bd02cfdb6deaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   MaxHP: 20
   CurrentHP: 20
   godMode: 0
@@ -182,6 +185,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b450f4fdd3381cb4eb260bae4ad22016, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   PlayerTag: Player
   AggroRange: 10
   AggroDuration: 3

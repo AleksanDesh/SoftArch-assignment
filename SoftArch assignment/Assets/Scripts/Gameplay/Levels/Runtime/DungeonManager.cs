@@ -19,13 +19,13 @@ namespace DungeonCrawler.Levels.Runtime
 
         // spawn-time instances; index matches RoomPrefabs. null = not spawned currently.
         private readonly List<GameObject> _spawnedInstances = new List<GameObject>();
-        private int currentIndex = -1;
+        private int _currentIndex = -1;
 
-        private Room currentRoom;
-        private GameObject currentRoomGO;
-        private GameObject currentCorridorGO;
-        private Room pendingRoom;
-        private GameObject pendingRoomGO;
+        private Room _currentRoom;
+        private GameObject _currentRoomGO;
+        private GameObject _currentCorridorGO;
+        private Room _pendingRoom;
+        private GameObject _pendingRoomGO;
 
         // --------------------- SERVER INITIALIZATION ---------------------
         public override void OnStartServer()
@@ -63,25 +63,25 @@ namespace DungeonCrawler.Levels.Runtime
                 return;
             }
 
-            currentIndex = index;
+            _currentIndex = index;
 
             // spawn the starting room
-            SpawnAtIndex(currentIndex, true, out currentRoomGO, out currentRoom);
+            SpawnAtIndex(_currentIndex, true, out _currentRoomGO, out _currentRoom);
 
-            if (currentRoom != null)
+            if (_currentRoom != null)
             {
-                currentRoom.Activate();
-                currentRoom.OpenEntrance();
+                _currentRoom.Activate();
+                _currentRoom.OpenEntrance();
             }
         }
 
         [Server]
         public void NotifyRoomCleared(Room clearedRoom)
         {
-            if (clearedRoom == null || clearedRoom != currentRoom) return;
+            if (clearedRoom == null || clearedRoom != _currentRoom) return;
 
-            int corridorIndex = currentIndex + 1;
-            int nextRoomIndex = currentIndex + 2;
+            int corridorIndex = _currentIndex + 1;
+            int nextRoomIndex = _currentIndex + 2;
 
             if (nextRoomIndex >= RoomPrefabs.Count)
             {
@@ -92,47 +92,47 @@ namespace DungeonCrawler.Levels.Runtime
             if (corridorIndex < RoomPrefabs.Count)
             {
                 // spawn corridor instead of enabling
-                SpawnAtIndex(corridorIndex, true, out currentCorridorGO, out _);
-                Debug.Log($"Spawned corridor [{corridorIndex}] {currentCorridorGO?.name}");
+                SpawnAtIndex(corridorIndex, true, out _currentCorridorGO, out _);
+                Debug.Log($"Spawned corridor [{corridorIndex}] {_currentCorridorGO?.name}");
             }
 
             // spawn the pending room
-            SpawnAtIndex(nextRoomIndex, true, out pendingRoomGO, out pendingRoom);
-            pendingRoom?.Activate();
+            SpawnAtIndex(nextRoomIndex, true, out _pendingRoomGO, out _pendingRoom);
+            _pendingRoom?.Activate();
         }
 
         [Server]
         public void NotifyPlayersInside(Room newRoom)
         {
-            if (newRoom == null || newRoom != pendingRoom) return;
+            if (newRoom == null || newRoom != _pendingRoom) return;
 
             // destroy previous room (despawn) and corridor (despawn)
-            if (currentRoomGO != null)
+            if (_currentRoomGO != null)
             {
-                int toDestroyIndex = currentIndex;
+                int toDestroyIndex = _currentIndex;
                 DestroyAtIndex(toDestroyIndex);
             }
 
-            if (currentCorridorGO != null)
+            if (_currentCorridorGO != null)
             {
-                int corridorIndex = currentIndex + 1;
+                int corridorIndex = _currentIndex + 1;
                 DestroyAtIndex(corridorIndex);
-                currentCorridorGO = null;
+                _currentCorridorGO = null;
             }
 
             // now apply pending -> current
-            currentRoomGO = pendingRoomGO;
-            currentRoom = pendingRoom;
-            currentIndex += 2;
+            _currentRoomGO = _pendingRoomGO;
+            _currentRoom = _pendingRoom;
+            _currentIndex += 2;
 
-            pendingRoomGO = null;
-            pendingRoom = null;
+            _pendingRoomGO = null;
+            _pendingRoom = null;
         }
 
         [Server]
         public void RequestRoomEntranceOpen(CorridorTrigger corridor)
         {
-            pendingRoom?.OpenEntrance();
+            _pendingRoom?.OpenEntrance();
         }
 
         // --------------------- SPAWN / DESPAWN HELPERS ---------------------
