@@ -152,7 +152,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
                 if (ent != null) UnregisterPlayer(ent);
             }
 
-            // Further cleanup: remove any entries by connection match (safety)
+            // Further cleanup: remove any entries by connection match
             PlayerEntities.RemoveAll(e =>
             {
                 if (e == null) return true;

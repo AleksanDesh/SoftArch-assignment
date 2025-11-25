@@ -1,7 +1,8 @@
+using DungeonCrawler.Core.Utils;
+using DungeonCrawler.Gameplay.Combat;
 using Mirror;
 using Unity.VisualScripting;
 using UnityEngine;
-using DungeonCrawler.Gameplay.Combat;
 
 public class GameManager : MonoBehaviour
 {
@@ -31,10 +32,14 @@ public class GameManager : MonoBehaviour
             Cursor.visible = (Cursor.lockState == CursorLockMode.None);
         }
 
+        
         if (Input.GetKeyDown(KeyCode.R))
-        {// Not intended for multiplayer, so won't work properly in multiplayer.
+        {// Won't work properly with online stuff
             localPlayer.GetComponent<Health>().RestoreHp();
-            localPlayer.SetActive(true);
+            //localPlayer.SetActive(true);
+            var nid = localPlayer.GetComponent<NetworkIdentity>();
+            var conn = nid.connectionToClient;
+            NetworkServer.Spawn(localPlayer, conn);
         }
 
         if (Input.GetKeyDown(KeyCode.G))
@@ -44,4 +49,6 @@ public class GameManager : MonoBehaviour
         }
         
     }
+
+
 }

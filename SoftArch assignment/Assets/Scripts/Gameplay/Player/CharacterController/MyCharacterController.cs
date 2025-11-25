@@ -89,6 +89,8 @@ namespace DungeonCrawler.Gameplay.Player.Controller
         private Vector3 lastInnerNormal = Vector3.zero;
         private Vector3 lastOuterNormal = Vector3.zero;
 
+        public Animator Animator;
+        private int hashSpeed, hashIsInAir, hashJump, hashLand, hashIsCrouching;
         private void Awake()
         {
             // Handle initial state
@@ -96,6 +98,24 @@ namespace DungeonCrawler.Gameplay.Player.Controller
 
             // Assign the characterController to the motor
             Motor.CharacterController = this;
+
+            if (Animator == null)
+                Animator = GetComponentInChildren<Animator>();
+
+
+            if (Animator != null)
+            {
+                hashSpeed = Animator.StringToHash("Speed");
+                hashIsInAir = Animator.StringToHash("IsInAir");
+                hashJump = Animator.StringToHash("Jump");
+                hashLand = Animator.StringToHash("Land");
+                //hashIsCrouching = Animator.StringToHash("IsCrouching");
+
+                // initial values
+                Animator.SetBool(hashIsInAir, false);
+                Animator.SetBool(hashIsCrouching, _isCrouching);
+                Animator.SetFloat(hashSpeed, 0f);
+            }
         }
 
         /// <summary>
@@ -356,6 +376,7 @@ namespace DungeonCrawler.Gameplay.Player.Controller
 
                                 // Apply added velocity
                                 currentVelocity += addedVelocity;
+
                             }
 
                             // Gravity
@@ -390,6 +411,13 @@ namespace DungeonCrawler.Gameplay.Player.Controller
                                 _jumpRequested = false;
                                 _jumpConsumed = true;
                                 _jumpedThisFrame = true;
+
+                                if (Animator != null && isLocalPlayer)
+                                {
+                                    Animator.SetTrigger(hashJump);
+                                    // set airborne immediately so state machine can transition
+                                    Animator.SetBool(hashIsInAir, true);
+                                }
                             }
                         }
 
@@ -458,7 +486,23 @@ namespace DungeonCrawler.Gameplay.Player.Controller
                                 // If no obstructions, uncrouch
                                 MeshRoot.localScale = new Vector3(1f, 1f, 1f);
                                 _isCrouching = false;
+                                //if (Animator != null && isLocalPlayer)
+                                    //Animator.SetBool(hashIsCrouching, false);
                             }
+                        }
+                        // Update animator parameters every frame (only on owner/local instance)
+                        if (Animator != null && isLocalPlayer)
+                        {
+                            // planar speed relative to character up
+                            float planarSpeed = Vector3.ProjectOnPlane(Motor.Velocity, Motor.CharacterUp).magnitude;
+
+
+                            // Smooth speed for nicer blending
+                            Animator.SetFloat(hashSpeed, planarSpeed, 0.1f, deltaTime);
+
+
+                            bool isAirborne = !Motor.GroundingStatus.IsStableOnGround;
+                            Animator.SetBool(hashIsInAir, isAirborne);
                         }
                         break;
                     }
@@ -519,6 +563,12 @@ namespace DungeonCrawler.Gameplay.Player.Controller
 
         protected void OnLanded()
         {
+            // Play landing animation locally (owner)
+            if (Animator != null && isLocalPlayer)
+            {
+                Animator.SetTrigger(hashLand);
+                Animator.SetBool(hashIsInAir, false);
+            }
         }
 
         protected void OnLeaveStableGround()
