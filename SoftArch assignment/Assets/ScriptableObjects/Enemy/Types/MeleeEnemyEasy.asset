@@ -19,5 +19,5 @@ MonoBehaviour:
   AggroDuration: 3
   AttackRange: 2
   AttackCooldown: 1.2
-  AttackDamage: 111
+  AttackDamage: 5
   SampleTargetPositionOnNavMesh: 1

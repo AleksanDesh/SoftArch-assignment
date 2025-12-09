@@ -7,6 +7,7 @@ public class AnimationEventForwarder : MonoBehaviour
 {
     PlayerWeaponController weaponCntrl;
 
+    public ParticleSystem slash1VFX;
     void Awake()
     {
         weaponCntrl = GetComponentInParent<PlayerWeaponController>();
@@ -25,6 +26,11 @@ public class AnimationEventForwarder : MonoBehaviour
         else Debug.LogWarning("[AnimationEventForwarder] No PlayerWeaponController found in parents to forward OnAttackAnimationEnd.");
     }
 
+
+    public void OnFirstAttackVfx()
+    {
+        slash1VFX.Play(withChildren: true);
+    }
     // LLM offer:
     // If you prefer, add overloads that accept AnimationEvent or a string:
     // public void OnAttackAnimationEnd(AnimationEvent evt) { ... }

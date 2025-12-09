@@ -27,7 +27,7 @@ namespace DungeonCrawler.Systems.CombatSystem
                 ev.Consumed = true;
                 return;
             }
-            Debug.Log($"{entity.name} was slain by {ev.TargetEntity}.");
+            //Debug.Log($"{entity.name} was slain by {ev.TargetEntity}.");
 
             if (entity.tag == "Player")
             {

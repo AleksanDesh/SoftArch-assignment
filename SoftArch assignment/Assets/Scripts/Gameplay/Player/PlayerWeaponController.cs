@@ -1,6 +1,8 @@
+using DungeonCrawler.Gameplay.Player.Controller;
 using Mirror;
 using UnityEngine;
 
+[RequireComponent(typeof(MyCharacterController))]
 public class PlayerWeaponController : NetworkBehaviour
 {
     [Header("Weapon objects (assign in prefab)")]
@@ -18,8 +20,14 @@ public class PlayerWeaponController : NetworkBehaviour
     private int hashAttack;
     private bool isAttacking = false;
 
+    MyCharacterController myCharacterController;
+    WeaponCollisionCheck weaponCollisionCheck;
+    float savedSpeed;
+
     void Awake()
     {
+        myCharacterController = GetComponent<MyCharacterController>();
+        weaponCollisionCheck = GetComponentInChildren<WeaponCollisionCheck>();
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
 
@@ -63,37 +71,51 @@ public class PlayerWeaponController : NetworkBehaviour
     private void RpcPlayAttack()
     {
         isAttacking = true;
+        weaponCollisionCheck.ListenForAttack();
 
         // Show front weapon immediately unless you want animation event to do it
-        if (!useAnimationEventToShowWeapon)
-            ShowFrontWeapon();
+        //if (!useAnimationEventToShowWeapon)
+        //    ShowFrontWeapon();
 
         if (animator != null)
             animator.SetTrigger(hashAttack);
+
+        //Debug.Log("Dividing speed");
+
     }
 
     // Called by Animation Event at the frame where the weapon should appear
     // (optional — only used if useAnimationEventToShowWeapon == true)
     public void OnAttackAnimationStart()
     {
-        ShowFrontWeapon();
+        if (frontWeapon != null && !frontWeapon.activeSelf)
+        {
+            ShowFrontWeapon();
+
+        }
     }
 
     // Called by Animation Event at the *end* of the attack animation
     // IMPORTANT: This must exist on the same GameObject that has the Animator playing the clip
     public void OnAttackAnimationEnd()
     {
-        EndAttack();
+        //Debug.Log("Attempting to end");
+        if (frontWeapon != null && frontWeapon.activeSelf)
+            EndAttack();
     }
 
     private void ShowFrontWeapon()
     {
         if (frontWeapon != null) frontWeapon.SetActive(true);
         if (backWeapon != null) backWeapon.SetActive(false);
+        savedSpeed = myCharacterController.MaxStableMoveSpeed;
+        myCharacterController.MaxStableMoveSpeed = (savedSpeed / 10);
     }
 
     private void EndAttack()
     {
+        //Debug.Log("Setting speed back to normal");
+        myCharacterController.MaxStableMoveSpeed = savedSpeed;
         if (frontWeapon != null) frontWeapon.SetActive(false);
         if (backWeapon != null) backWeapon.SetActive(true);
 

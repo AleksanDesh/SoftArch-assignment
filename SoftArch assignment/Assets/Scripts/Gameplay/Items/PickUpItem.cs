@@ -1,3 +1,4 @@
+using DungeonCrawler.Core.Utils;
 using DungeonCrawler.Gameplay.Items.Data;
 using Mirror;
 using System.Collections;
@@ -6,6 +7,7 @@ using UnityEngine;
 namespace DungeonCrawler.Gameplay.Items
 {
     [RequireComponent(typeof(Collider))]
+    [RequireComponent(typeof(Entity))]
     public class PickupItem : NetworkBehaviour
     {
         [SerializeField] private ItemDefinition item;
@@ -48,17 +50,22 @@ namespace DungeonCrawler.Gameplay.Items
             // ensure a PickupItem component exists
             var pickup = go.GetComponent<PickupItem>();
             if (pickup == null) pickup = go.AddComponent<PickupItem>();
+            var entity = go.GetComponent<Entity>();
+            if (entity == null) entity = go.AddComponent<Entity>();
 
-            pickup.InitializeInternal(def, qty);
+            pickup.InitializeInternal(def, qty, entity);
             NetworkServer.Spawn(go);
 
             return pickup;
         }
 
-        void InitializeInternal(ItemDefinition def, int qty)
+        void InitializeInternal(ItemDefinition def, int qty, Entity entity)
         {
             item = def;
             quantity = Mathf.Max(0, qty);
+            entity.EntityTag = def.ItemId;
+            //Debug.Log($"Spawning item with expected name {def.ItemId}, and current entity is {entity.EntityTag}");
+
             // apply visuals or other setup here (icon, mesh, name, etc.)
             // SyncVisuals();
 

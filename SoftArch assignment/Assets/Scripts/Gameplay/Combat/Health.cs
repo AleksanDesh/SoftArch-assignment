@@ -3,7 +3,10 @@ using DungeonCrawler.Core.Utils;
 using DungeonCrawler.Gameplay.Stats;
 using DungeonCrawler.Gameplay.Stats.Rewards;
 using Mirror;
+using NaughtyAttributes;
+using System;
 using UnityEngine;
+
 
 namespace DungeonCrawler.Gameplay.Combat
 {
@@ -14,10 +17,11 @@ namespace DungeonCrawler.Gameplay.Combat
     {
         public int MaxHP = 50;
         [SyncVar]
-        public int CurrentHP;
+        private int CurrentHP;
 
         Entity _entity;
 
+        //[Expandable]
         public bool godMode = false;
 
         void Start()
@@ -53,11 +57,17 @@ namespace DungeonCrawler.Gameplay.Combat
                 }
 
                 // Enqueue DeathEvent
-                Debug.Log("Death event called with current health = " + CurrentHP);
+                //Debug.Log("Death event called with current health = " + CurrentHP);
                 var death = new DeathEvent(_entity, damager, xpReward);
-                Debug.Log($"Health enqueued DeathEvent type {death.GetType().FullName}, and trying to add {xpReward} xp to the killer {damager.name}");
+                //Debug.Log($"Health enqueued DeathEvent type {death.GetType().FullName}, and trying to add {xpReward} xp to the killer {damager.name}");
                 EventBus.Instance.Enqueue(death);
             }
+        }
+
+
+        public int GetCurrentHp()
+        {
+            return CurrentHP;
         }
     }
 }

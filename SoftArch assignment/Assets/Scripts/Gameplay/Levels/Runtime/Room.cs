@@ -345,8 +345,8 @@ namespace DungeonCrawler.Levels.Runtime
         {
             yield return new WaitForEndOfFrame();
             GameObject door = Doors[index];
-            Debug.Log($"{name}: observers count = {netIdentity.observers.Count}");
-            Debug.Log($"[Server] Calling RpcSetDoorState on {door.name} (room active={gameObject.activeSelf}, enabled={enabled}, netId={netIdentity?.netId})");
+            //Debug.Log($"{name}: observers count = {netIdentity.observers.Count}");
+            //Debug.Log($"[Server] Calling RpcSetDoorState on {door.name} (room active={gameObject.activeSelf}, enabled={enabled}, netId={netIdentity?.netId})");
             if (door == null) yield return null;
             RpcSetDoorState(index, true);
 
@@ -363,8 +363,8 @@ namespace DungeonCrawler.Levels.Runtime
         public void CloseDoor(int index)
         {
             GameObject door = Doors[index];
-            Debug.Log($"{name}: observers count = {netIdentity.observers.Count}");
-            Debug.Log($"[Server] Calling RpcSetDoorState on {door.name} (room active={gameObject.activeSelf}, enabled={enabled}, netId={netIdentity?.netId})");
+            //Debug.Log($"{name}: observers count = {netIdentity.observers.Count}");
+            //Debug.Log($"[Server] Calling RpcSetDoorState on {door.name} (room active={gameObject.activeSelf}, enabled={enabled}, netId={netIdentity?.netId})");
             if (door == null) return;
             RpcSetDoorState(index, false);
 
@@ -379,7 +379,7 @@ namespace DungeonCrawler.Levels.Runtime
         [ClientRpc]
         public void RpcSetDoorState(int index, bool open)
         {
-            Debug.Log("RPC RECEIVED");
+            //Debug.Log("RPC RECEIVED");
             if (Doors == null || index < 0 || index >= Doors.Length)
                 return;
 

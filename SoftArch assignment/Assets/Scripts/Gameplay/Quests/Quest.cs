@@ -1,0 +1,171 @@
+using DungeonCrawler.Core.Events;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace DungeonCrawler.Quests
+{
+    [CreateAssetMenu(menuName = "DungeonCrawler/Quests/Quest", fileName = "Quest")]
+    public class Quest : ScriptableObject
+    {
+        public string questID;
+        public string questName;
+        public string description;
+        public List<QuestObjective> objectives;
+
+        private void OnValidate()
+        {
+            if (string.IsNullOrEmpty(questID))
+            {
+                questID = questName + Guid.NewGuid().ToString();
+            }
+        }
+
+    }
+    [System.Serializable]
+    public class QuestObjective
+    {
+        public string objectiveID;
+        public string description;
+        public ObjectiveType type;
+
+        public int requiredAmount;
+        public int currentAmount;
+
+        public string targetName;
+
+        public bool IsCompleted => currentAmount >= requiredAmount;
+    }
+
+    public enum ObjectiveType
+    {
+        CollectItem,
+        DefeatEnemy,
+        ReachLocation,
+        TalkNPC,
+        Custom
+    }
+
+
+
+
+    [System.Serializable]
+    public class QuestProgress
+    {
+        public Quest quest;
+        public List<QuestObjective> objectives;
+        public event Action<QuestProgress> OnUpdated;
+
+        public QuestProgress(Quest quest)
+        {
+            this.quest = quest;
+            objectives = new List<QuestObjective>();
+
+            foreach (var obj in quest.objectives)
+            {
+                objectives.Add(new QuestObjective
+                {
+                    objectiveID = obj.objectiveID,
+                    description = obj.description,
+                    type = obj.type,
+                    requiredAmount = obj.requiredAmount,
+                    currentAmount = 0,
+                    targetName = obj.targetName
+
+                });
+
+                switch (obj.type)
+                {
+                    case ObjectiveType.CollectItem:
+                        if (EventBus.Instance != null) EventBus.Instance.Subscribe<ItemPickedEvent>(TryIncrement);
+                        break;
+                    case ObjectiveType.DefeatEnemy:
+                        if (EventBus.Instance != null) EventBus.Instance.Subscribe<DeathEvent>(TryIncrement);
+                        break;
+                    case ObjectiveType.ReachLocation:
+                        break;
+                    case ObjectiveType.TalkNPC:
+                        break;
+                    case ObjectiveType.Custom:
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+        }
+
+        ~QuestProgress()
+        {
+            UnsubscribeFromAll();
+        }
+
+        public bool IsCompleted => objectives.TrueForAll(o => o.IsCompleted);
+
+        public string QuestID => quest.questID;
+
+        void TryIncrement(GameEvent ev)
+        {
+            if (IsCompleted) return;
+            bool anyProgress = false;
+            foreach (var obj in objectives)
+            {
+                if (obj.IsCompleted) continue;
+                switch (ev)
+                {
+                    case DeathEvent de:
+                        if (de.SourceEntity.EntityTag == obj.targetName)
+                        {
+                            obj.currentAmount++;
+                            anyProgress = true;
+                        }
+                        break;
+                    case ItemPickedEvent ipe:
+                        if (ipe.ItemDef.ItemName == obj.targetName)
+                        {
+                            obj.currentAmount+= ipe.Quantity;
+                            anyProgress = true;                   
+                        }
+                        break;
+                    default:
+                        break;
+
+                }
+            }
+            if (anyProgress)
+            {
+                if (IsCompleted)
+                {
+                    UnsubscribeFromAll();
+                }
+                OnUpdated?.Invoke(this);
+                // somehow make the UI update me.
+            }
+        }
+
+        void UnsubscribeFromAll()
+        {
+            foreach (var obj in objectives)
+            {
+                switch (obj.type)
+                {
+                    case ObjectiveType.CollectItem:
+                        if (EventBus.Instance != null) EventBus.Instance.Unsubscribe<ItemPickedEvent>(TryIncrement);
+                        break;
+                    case ObjectiveType.DefeatEnemy:
+                        if (EventBus.Instance != null) EventBus.Instance.Unsubscribe<DeathEvent>(TryIncrement);
+                        break;
+                    case ObjectiveType.ReachLocation:
+                        break;
+                    case ObjectiveType.TalkNPC:
+                        break;
+                    case ObjectiveType.Custom:
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+}

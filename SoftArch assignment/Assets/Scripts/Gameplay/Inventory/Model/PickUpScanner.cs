@@ -40,8 +40,8 @@ namespace DungeonCrawler.Gameplay.Inventory.Model
                 if (added <= 0) continue;
 
                 int removed = pickup.TryTake(added);
-                //if (EventBus.Instance != null)
-                //    EventBus.Instance.Enqueue(new ItemPickedEvent(entity, pickup.GetComponent<Entity>(), pickup.Item, removed));
+                if (EventBus.Instance != null)
+                    EventBus.Instance.Enqueue(new ItemPickedEvent(entity, pickup.GetComponent<Entity>(), pickup.Item, removed));
                 taken++;
             }
         }

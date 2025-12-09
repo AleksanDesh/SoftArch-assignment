@@ -90,6 +90,7 @@ namespace DungeonCrawler.Gameplay.Player.Controller
         private Vector3 lastOuterNormal = Vector3.zero;
 
         public Animator Animator;
+        public NetworkAnimator NetworkAnimator;
         private int hashSpeed, hashIsInAir, hashJump, hashLand, hashIsCrouching;
         private void Awake()
         {
@@ -113,7 +114,7 @@ namespace DungeonCrawler.Gameplay.Player.Controller
 
                 // initial values
                 Animator.SetBool(hashIsInAir, false);
-                Animator.SetBool(hashIsCrouching, _isCrouching);
+                //Animator.SetBool(hashIsCrouching, _isCrouching);
                 Animator.SetFloat(hashSpeed, 0f);
             }
         }
@@ -414,7 +415,7 @@ namespace DungeonCrawler.Gameplay.Player.Controller
 
                                 if (Animator != null && isLocalPlayer)
                                 {
-                                    Animator.SetTrigger(hashJump);
+                                    NetworkAnimator.SetTrigger(hashJump);
                                     // set airborne immediately so state machine can transition
                                     Animator.SetBool(hashIsInAir, true);
                                 }
@@ -566,7 +567,7 @@ namespace DungeonCrawler.Gameplay.Player.Controller
             // Play landing animation locally (owner)
             if (Animator != null && isLocalPlayer)
             {
-                Animator.SetTrigger(hashLand);
+                NetworkAnimator.SetTrigger(hashLand);
                 Animator.SetBool(hashIsInAir, false);
             }
         }

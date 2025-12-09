@@ -1,3 +1,4 @@
+using DungeonCrawler.Core.Utils;
 using UnityEngine;
 
 namespace DungeonCrawler.Gameplay.Items.Data
@@ -21,6 +22,8 @@ namespace DungeonCrawler.Gameplay.Items.Data
 
         [Tooltip("Optional world prefab to spawn when dropping or spawning in world")]
         public GameObject WorldPrefab;
+
+
 
         // Additional fields: weight, rarity, tags, type, stats modifiers, etc. IF needed.
     }
