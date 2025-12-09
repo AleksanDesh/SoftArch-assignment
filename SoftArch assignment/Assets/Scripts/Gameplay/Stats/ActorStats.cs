@@ -14,22 +14,24 @@ namespace DungeonCrawler.Gameplay.Stats
     public class ActorStats : MonoBehaviour
     {
         [Tooltip("Optional per-actor LevelConfig. If null, LevelSystem.DefaultConfig will be used.")]
-        public LevelConfig LevelConfig;
+        [SerializeField] private LevelConfig LevelConfig;
+        public LevelConfig GetLevelConfig => LevelConfig;
 
         [Header("Progression")]
         [Tooltip("Current level (1-based)")]
-        public int Level = 1;
+        [SerializeField] private int Level = 1;
+        public int GetLevel => Level;
 
         [Tooltip("Do I really need to explain?")]
-        public int currentXp = 0;
+        [SerializeField] private int currentXp = 0;
 
         [Header("Base Stats (example)")]
-        public int Strength = 1;
-        public int Vitality = 1;
-        public int Intelligence = 1;
+        [SerializeField] private int Strength = 1;
+        [SerializeField] private int Vitality = 1;
+        [SerializeField] private int Intelligence = 1;
 
         // Helper: get the Entity component on same GameObject
-        public Entity Entity => GetComponent<Entity>();
+        [SerializeField] private Entity Entity => GetComponent<Entity>();
 
         /// <summary>
         /// Adds experience to this actor and returns a list of LevelUpEvent objects

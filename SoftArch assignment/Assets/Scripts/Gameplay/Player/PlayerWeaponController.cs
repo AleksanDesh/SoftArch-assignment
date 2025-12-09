@@ -17,8 +17,8 @@ public class PlayerWeaponController : NetworkBehaviour
     [Tooltip("If true, the AnimationClip will call OnAttackAnimationStart() to show the weapon at a precise frame.")]
     [SerializeField] private bool useAnimationEventToShowWeapon = true;
 
-    private int hashAttack;
-    private bool isAttacking = false;
+    private int _hashAttack;
+    private bool _isAttacking = false;
 
     MyCharacterController myCharacterController;
     WeaponCollisionCheck weaponCollisionCheck;
@@ -31,7 +31,7 @@ public class PlayerWeaponController : NetworkBehaviour
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
 
-        hashAttack = Animator.StringToHash(attackTriggerName);
+        _hashAttack = Animator.StringToHash(attackTriggerName);
 
         // Try auto-find (but prefer assigning in the prefab)
         if (frontWeapon == null) frontWeapon = transform.Find("FrontWeapon")?.gameObject;
@@ -49,7 +49,7 @@ public class PlayerWeaponController : NetworkBehaviour
     {
         if (!isLocalPlayer) return; // only owner listens for local input here
 
-        if (!isAttacking && Input.GetMouseButton(0))
+        if (!_isAttacking && Input.GetMouseButton(0))
         {
             // Request the server to broadcast the attack to everyone
             CmdRequestAttack();
@@ -70,7 +70,7 @@ public class PlayerWeaponController : NetworkBehaviour
     [ClientRpc]
     private void RpcPlayAttack()
     {
-        isAttacking = true;
+        _isAttacking = true;
         weaponCollisionCheck.ListenForAttack();
 
         // Show front weapon immediately unless you want animation event to do it
@@ -78,7 +78,7 @@ public class PlayerWeaponController : NetworkBehaviour
         //    ShowFrontWeapon();
 
         if (animator != null)
-            animator.SetTrigger(hashAttack);
+            animator.SetTrigger(_hashAttack);
 
         //Debug.Log("Dividing speed");
 
@@ -119,7 +119,7 @@ public class PlayerWeaponController : NetworkBehaviour
         if (frontWeapon != null) frontWeapon.SetActive(false);
         if (backWeapon != null) backWeapon.SetActive(true);
 
-        isAttacking = false;
+        _isAttacking = false;
     }
 
     // Force cancel (callable by other systems)

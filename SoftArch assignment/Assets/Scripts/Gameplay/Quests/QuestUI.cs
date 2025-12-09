@@ -1,34 +1,31 @@
 using NUnit.Framework;
-using UnityEngine;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using TMPro;
+using Unity.VisualScripting;
+using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 namespace DungeonCrawler.Quests
 {
     public class QuestUI : MonoBehaviour
     {
 
-        public Transform questListContent;
-        public GameObject questEntryPrefab;
-        public GameObject objectiveTextPrefab;
+        [SerializeField] private Transform questListContent;
+        [SerializeField] private GameObject questEntryPrefab;
+        [SerializeField] private GameObject objectiveTextPrefab;
 
         public Quest testQuest;
         public int testQuestAmount;
-        private List<QuestProgress> testQuests = new();
-        private Dictionary<QuestProgress, GameObject> entryByProgress = new();
+        private List<QuestProgress> _quests = new();
+        private Dictionary<QuestProgress, GameObject> _entryByProgress = new();
 
 
         void Start()
         {
+            // Debug quest spawning
             for (int i = 0; i < testQuestAmount; i++)
             {
-                var progress = new QuestProgress(testQuest);
-                testQuests.Add(progress);
-                var entry = Instantiate(questEntryPrefab, questListContent);
-                entryByProgress[progress] = entry;
-                SetupEntry(entry, progress);
-                progress.OnUpdated += HandleQuestUpdated;
+                CreateQuest(new QuestProgress(testQuest));
             }
         }
 
@@ -37,27 +34,24 @@ namespace DungeonCrawler.Quests
         /// </summary>
         /// <param name="entry"> quest GO </param>
         /// <param name="quest"> quest progress </param>
-        void SetupEntry(GameObject entry, QuestProgress quest)
+        void CreateQuest(QuestProgress quest)
         {
+            // Spawn the quest and save a reference
+            _quests.Add(quest);
+            var entry = Instantiate(questEntryPrefab, questListContent);
+            _entryByProgress[quest] = entry;
             TMP_Text questNameText = entry.transform.Find("QuestNameText").GetComponent<TMP_Text>();
-            Transform objectiveList = entry.transform.Find("ObjectiveList");
             questNameText.text = quest.quest.questName;
-            foreach (Transform ch in objectiveList) Destroy(ch.gameObject);
+
+            // Spawn all objectives of this quest
+            Transform objectiveList = entry.transform.Find("ObjectiveList");
             foreach (var objective in quest.objectives)
             {
-                GameObject objTextGO = Instantiate(objectiveTextPrefab, objectiveList);
-                objTextGO.name = objective.objectiveID;
-                TMP_Text objText = objTextGO.GetComponent<TMP_Text>();
-                if (objective.IsCompleted)
-                {
-                    objText.text = $"{objective.description} DONE";
-                    objText.color = Color.green;
-                }
-                else
-                {
-                    objText.text = $"{objective.description} ({objective.currentAmount} / {objective.requiredAmount})";
-                }
+                GameObject go = Instantiate(objectiveTextPrefab, objectiveList);
+                go.name = objective.objectiveID;
             }
+            UpdateAllObjectives(entry, quest);
+            quest.OnUpdated += HandleQuestUpdated;
         }
 
         /// <summary>
@@ -65,35 +59,37 @@ namespace DungeonCrawler.Quests
         /// </summary>
         /// <param name="entry"></param>
         /// <param name="quest"></param>
-        void UpdateEntry(GameObject entry, QuestProgress quest)
+        void UpdateQuest(GameObject entry, QuestProgress quest)
         {
-            Debug.Log($"Update entry called");
+            //Debug.Log($"Update entry called");
             TMP_Text questNameText = entry.transform.Find("QuestNameText").GetComponent<TMP_Text>();
-            Transform objectiveList = entry.transform.Find("ObjectiveList");
-
             if (quest.IsCompleted)
             {
-                Debug.Log("QUEST COMPLETED");
+                //Debug.Log("QUEST COMPLETED");
                 questNameText.text = quest.quest.questName + " DONE";
                 questNameText.color = Color.green;
-                foreach (Transform ch in objectiveList) Destroy(ch.gameObject);
+                UpdateAllObjectives(entry, quest);
+                quest.OnUpdated -= HandleQuestUpdated;
                 return;
             }
+            UpdateAllObjectives(entry, quest);
+        }
 
-            //questNameText.text = quest.quest.questName;
-
+        void UpdateAllObjectives(GameObject entry, QuestProgress quest)
+        {
+            Transform objectiveList = entry.transform.Find("ObjectiveList");
             foreach (var objective in quest.objectives)
             {
                 Transform child = objectiveList.Find(objective.objectiveID);
                 TMP_Text objText = child.GetComponent<TMP_Text>();
-                if (objective.IsCompleted)
-                {
-                    objText.text = $"{objective.description} DONE";
-                    objText.color = Color.green;
+                if (!objective.IsCompleted)
+                { // description + progress
+                    objText.text = $"{objective.description} ({objective.currentAmount} / {objective.requiredAmount})";
                 }
                 else
-                {
-                    objText.text = $"{objective.description} ({objective.currentAmount} / {objective.requiredAmount})";
+                { // Mark the description as done
+                    objText.text = $"{objective.description} DONE";
+                    objText.color = Color.green;
                 }
             }
         }
@@ -104,8 +100,17 @@ namespace DungeonCrawler.Quests
         /// <param name="progress"> the quest</param>
         void HandleQuestUpdated(QuestProgress progress)
         {
-            if (!entryByProgress.TryGetValue(progress, out var entry)) return;
-            UpdateEntry(entry, progress);
+            if (!_entryByProgress.TryGetValue(progress, out var entry)) return;
+            UpdateQuest(entry, progress);
+        }
+
+        void OnDestroy()
+        {
+            foreach (var progress in _entryByProgress.Keys)
+            {
+                progress.OnUpdated -= HandleQuestUpdated;
+            }
+            _entryByProgress.Clear();
         }
     }
 }

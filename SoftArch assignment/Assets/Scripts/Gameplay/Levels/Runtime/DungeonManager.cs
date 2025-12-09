@@ -9,13 +9,13 @@ namespace DungeonCrawler.Levels.Runtime
     {
         [Header("Dungeon setup")]
         [Tooltip("List of room and corridor prefabs in the order they appear (Room, Corridor, Room, Corridor, ...)")]
-        public List<GameObject> RoomPrefabs = new List<GameObject>();
+        [SerializeField] private List<GameObject> RoomPrefabs = new List<GameObject>();
 
         [Tooltip("Optional positional offset for spawned rooms.")]
-        public Transform Offset;
+        [SerializeField] private Transform Offset;
 
         [Tooltip("Delay between transitions.")]
-        public float TransitionDelay = 0.8f;
+        [SerializeField] private float TransitionDelay = 0.8f;
 
         // spawn-time instances; index matches RoomPrefabs. null = not spawned currently.
         private readonly List<GameObject> _spawnedInstances = new List<GameObject>();

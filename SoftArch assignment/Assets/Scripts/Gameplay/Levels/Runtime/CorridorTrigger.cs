@@ -13,7 +13,7 @@ namespace DungeonCrawler.Levels.Runtime
     public class CorridorTrigger : NetworkBehaviour
     {
         [Tooltip("Tag of the player GameObject or leave empty to use EntityManager lookup.")]
-        public string PlayerTag = "Player";
+        [SerializeField] private static string PlayerTag = "Player";
 
         DungeonManager _dm;
 

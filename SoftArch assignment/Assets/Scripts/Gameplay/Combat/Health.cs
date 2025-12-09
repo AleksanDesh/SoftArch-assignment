@@ -15,7 +15,8 @@ namespace DungeonCrawler.Gameplay.Combat
     [RequireComponent(typeof(XpRewardSource))]
     public class Health : NetworkBehaviour
     {
-        public int MaxHP = 50;
+
+        [SerializeField] private int MaxHP = 50;
         [SyncVar]
         private int CurrentHP;
 

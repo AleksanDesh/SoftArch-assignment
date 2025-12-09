@@ -49,7 +49,9 @@ namespace DungeonCrawler.Quests
 
 
 
-
+    /// <summary>
+    /// an active quest, that has progress stored inside
+    /// </summary>
     [System.Serializable]
     public class QuestProgress
     {
@@ -76,7 +78,7 @@ namespace DungeonCrawler.Quests
                 });
 
                 switch (obj.type)
-                {
+                { // *Event bus checks if duplicate*
                     case ObjectiveType.CollectItem:
                         if (EventBus.Instance != null) EventBus.Instance.Subscribe<ItemPickedEvent>(TryIncrement);
                         break;
@@ -105,6 +107,10 @@ namespace DungeonCrawler.Quests
 
         public string QuestID => quest.questID;
 
+        /// <summary>
+        /// Increments objective counter if GameEvent is relevant to the quest
+        /// </summary>
+        /// <param name="ev"></param>
         void TryIncrement(GameEvent ev)
         {
             if (IsCompleted) return;

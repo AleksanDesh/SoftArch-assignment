@@ -10,13 +10,14 @@ namespace DungeonCrawler.Levels.Runtime
     public class RoomSpawnPoint : MonoBehaviour
     {
         [Tooltip("Prefab of enemy to spawn at this spawn point.")]
-        public List<GameObject> EnemyPrefabs = new List<GameObject>();
+        [SerializeField] private List<GameObject> EnemyPrefabs = new List<GameObject>();
 
         [Tooltip("How many to spawn at this point")]
-        public int Quantity = 1;
+        [SerializeField] private int Quantity = 1;
+        public int GetQuantity => Quantity;
 
         [Tooltip("Optional random positional jitter around this point")]
-        public float JitterRadius = 0.3f;
+        [SerializeField] private float JitterRadius = 0.3f;
 
         /// <summary>Generate a spawn position near this spawn point (with jitter).</summary>
         public Vector3 GetSpawnPosition()

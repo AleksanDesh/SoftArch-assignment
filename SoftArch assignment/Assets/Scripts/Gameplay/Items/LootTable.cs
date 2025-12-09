@@ -17,9 +17,9 @@ namespace DungeonCrawler.Gameplay.Items
     [CreateAssetMenu(fileName = "DungeonCrawler/LootTable", menuName = "DungeonCrawler/NewLootTable")]
     public class LootTable : ScriptableObject
     {
-        public List<LootEntry> Entries = new List<LootEntry>();
+        [SerializeField] private List<LootEntry> Entries = new List<LootEntry>();
         [Tooltip("How many independent rolls to perform when rolling this table.")]
-        public int Rolls = 1;
+        [SerializeField] private int Rolls = 1;
 
         // simple roll: returns list of (item, qty)
         public List<(ItemDefinition item, int qty)> Roll(System.Random rng = null)

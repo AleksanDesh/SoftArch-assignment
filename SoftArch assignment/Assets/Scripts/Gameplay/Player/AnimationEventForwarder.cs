@@ -7,7 +7,7 @@ public class AnimationEventForwarder : MonoBehaviour
 {
     PlayerWeaponController weaponCntrl;
 
-    public ParticleSystem slash1VFX;
+    [SerializeField] private ParticleSystem slash1VFX;
     void Awake()
     {
         weaponCntrl = GetComponentInParent<PlayerWeaponController>();

@@ -20,23 +20,23 @@ public class LightFlicker : MonoBehaviour
 
     // cached
     Light _light;
-    float originalIntensity;
-    Color originalColor;
-    float origHue, origSat, origVal;
-    float intensityPhase;
-    float colorPhase;
+    float _originalIntensity;
+    Color _originalColor;
+    float _origHue, _origSat, _origVal;
+    float _intensityPhase;
+    float _colorPhase;
 
     void Awake()
     {
         _light = GetComponent<Light>();
-        originalIntensity = _light.intensity;
-        originalColor = _light.color;
-        Color.RGBToHSV(originalColor, out origHue, out origSat, out origVal);
+        _originalIntensity = _light.intensity;
+        _originalColor = _light.color;
+        Color.RGBToHSV(_originalColor, out _origHue, out _origSat, out _origVal);
 
         // random offsets so multiple lights don't flicker identically
         if (randomSeed == 0f) randomSeed = Random.value * 1000f;
-        intensityPhase = randomSeed + Random.Range(0f, 10f);
-        colorPhase = randomSeed + Random.Range(10f, 20f);
+        _intensityPhase = randomSeed + Random.Range(0f, 10f);
+        _colorPhase = randomSeed + Random.Range(10f, 20f);
     }
 
     void Update()
@@ -48,16 +48,16 @@ public class LightFlicker : MonoBehaviour
         if (usePerlinForIntensity)
         {
             // PerlinNoise returns 0..1 -> remap to -1..1
-            float p = Mathf.PerlinNoise(intensityPhase, t * intensityFrequency);
+            float p = Mathf.PerlinNoise(_intensityPhase, t * intensityFrequency);
             intensityFactor = p * 2f - 1f;
         }
         else
         {
             // sine wave: cycles per second = intensityFrequency
-            intensityFactor = Mathf.Sin(2f * Mathf.PI * intensityFrequency * t + intensityPhase);
+            intensityFactor = Mathf.Sin(2f * Mathf.PI * intensityFrequency * t + _intensityPhase);
         }
 
-        float newIntensity = originalIntensity + intensityFactor * intensityAmplitude;
+        float newIntensity = _originalIntensity + intensityFactor * intensityAmplitude;
         newIntensity = Mathf.Max(0f, newIntensity); // don't go negative
         _light.intensity = newIntensity;
 
@@ -65,31 +65,31 @@ public class LightFlicker : MonoBehaviour
         float colorFactorH = 0f, colorFactorS = 0f, colorFactorV = 0f;
         if (usePerlinForColor)
         {
-            float ph = Mathf.PerlinNoise(colorPhase, t * colorFrequency);
-            float ps = Mathf.PerlinNoise(colorPhase + 10f, t * colorFrequency);
-            float pv = Mathf.PerlinNoise(colorPhase + 20f, t * colorFrequency);
+            float ph = Mathf.PerlinNoise(_colorPhase, t * colorFrequency);
+            float ps = Mathf.PerlinNoise(_colorPhase + 10f, t * colorFrequency);
+            float pv = Mathf.PerlinNoise(_colorPhase + 20f, t * colorFrequency);
             colorFactorH = ph * 2f - 1f;
             colorFactorS = ps * 2f - 1f;
             colorFactorV = pv * 2f - 1f;
         }
         else
         {
-            float s = Mathf.Sin(2f * Mathf.PI * colorFrequency * t + colorPhase);
-            float s2 = Mathf.Sin(2f * Mathf.PI * colorFrequency * t * 1.37f + colorPhase + 1f);
-            float s3 = Mathf.Sin(2f * Mathf.PI * colorFrequency * t * 0.73f + colorPhase + 2f);
+            float s = Mathf.Sin(2f * Mathf.PI * colorFrequency * t + _colorPhase);
+            float s2 = Mathf.Sin(2f * Mathf.PI * colorFrequency * t * 1.37f + _colorPhase + 1f);
+            float s3 = Mathf.Sin(2f * Mathf.PI * colorFrequency * t * 0.73f + _colorPhase + 2f);
             colorFactorH = s;
             colorFactorS = s2;
             colorFactorV = s3;
         }
 
-        float h = origHue + colorFactorH * hueAmplitude;
+        float h = _origHue + colorFactorH * hueAmplitude;
         h = Mathf.Repeat(h, 1f); // wrap hue
-        float sNew = Mathf.Clamp01(origSat + colorFactorS * saturationAmplitude);
-        float vNew = Mathf.Clamp01(origVal + colorFactorV * valueAmplitude);
+        float sNew = Mathf.Clamp01(_origSat + colorFactorS * saturationAmplitude);
+        float vNew = Mathf.Clamp01(_origVal + colorFactorV * valueAmplitude);
 
         Color newColor = Color.HSVToRGB(h, sNew, vNew);
         // preserve alpha from original color (usually 1)
-        newColor.a = originalColor.a;
+        newColor.a = _originalColor.a;
         _light.color = newColor;
     }
 }

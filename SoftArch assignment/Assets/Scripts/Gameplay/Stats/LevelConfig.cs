@@ -8,12 +8,12 @@ namespace DungeonCrawler.Gameplay.Stats
     public class LevelConfig : ScriptableObject
     {
         [Tooltip("Explicit XP required to go from level N to N+1.\nIf empty, fallback to formula (BaseXP * level^Exponent).")]
-        public List<int> xpPerLevel = new List<int>();
+        [SerializeField] private List<int> xpPerLevel = new List<int>();
 
         [Header("Fallback formula (used if xpPerLevel is empty)")]
-        public int BaseXP = 100;
+        [SerializeField] private int BaseXP = 100;
         [Range(1f, 3f)]
-        public float Exponent = 1.2f;
+        [SerializeField] private float Exponent = 1.2f;
 
         /// <summary>
         /// Returns XP required to progress from 'level' to level+1.

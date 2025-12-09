@@ -13,10 +13,10 @@ namespace DungeonCrawler.Gameplay.Stats.Rewards
         public override int CalculateReward(Entity dead, ActorStats deadStats, Entity killer, ActorStats killerStats, LevelConfig fallbackConfig)
         {
             if (killerStats == null) return 0;
-            var cfg = killerStats.LevelConfig != null ? killerStats.LevelConfig : fallbackConfig;
+            var cfg = killerStats.GetLevelConfig != null ? killerStats.GetLevelConfig : fallbackConfig;
             if (cfg == null) return 0;
 
-            int needed = cfg.GetXpForLevel(killerStats.Level);
+            int needed = cfg.GetXpForLevel(killerStats.GetLevel);
             int val = Mathf.FloorToInt(needed * Percentage);
             return Mathf.Max(0, val);
         }

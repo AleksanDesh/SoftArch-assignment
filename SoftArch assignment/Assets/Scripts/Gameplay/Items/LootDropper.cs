@@ -9,16 +9,16 @@ namespace DungeonCrawler.Gameplay.Items
     public class LootDropper : MonoBehaviour
     {
         [Tooltip("ScriptableObject loot table")]
-        public LootTable Table;
+        [SerializeField] private LootTable Table;
 
         [Tooltip("If true, attempt to directly give items to killer's inventory before spawning world pickups.")]
-        public bool AutoGrantToKiller = true;
+        [SerializeField] private bool AutoGrantToKiller = true;
 
         [Tooltip("Prefab fallback used when ItemDefinition.WorldPrefab is null. Sphere by default")]
-        public GameObject DefaultPickupPrefab;
+        [SerializeField] private GameObject DefaultPickupPrefab;
 
         [Tooltip("Max radius to scatter spawned pickups on XZ plane")]
-        public float JitterRadius = 0.6f;
+        [SerializeField] private float JitterRadius = 0.6f;
 
         void Awake()
         {

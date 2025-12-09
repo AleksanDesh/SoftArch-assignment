@@ -23,32 +23,32 @@ namespace DungeonCrawler.Levels.Runtime
     public class Room : NetworkBehaviour
     {
         [Header("Doors (door 0 = entrance)")]
-        public GameObject[] Doors;
+        [SerializeField] private GameObject[] Doors;
 
         [Header("Entrance")]
-        public float EntranceOpenDuration = 5f;
-        public bool TeleportPlayersOnClose = true;
-        public Transform EntranceFallbackPoint;
-        public string PlayerTag = "Player"; // fallback player search
+        [SerializeField] private float EntranceOpenDuration = 5f;
+        [SerializeField] private bool TeleportPlayersOnClose = true;
+        [SerializeField] private Transform EntranceFallbackPoint;
+        [SerializeField] private string PlayerTag = "Player"; // fallback player search
 
         [Header("Room bounds (used to determine who's inside)")]
-        public Collider RoomBounds;
+        [SerializeField] private Collider RoomBounds;
 
         [Header("Spawning")]
         [Tooltip("Optional parent for spawned enemies")]
-        public Transform SpawnParent;
-        public RoomSpawnPoint[] SpawnPoints;
-        public bool SpawnOnActivate = true;
+        [SerializeField] private Transform SpawnParent;
+        [SerializeField] private RoomSpawnPoint[] SpawnPoints;
+        [SerializeField] private bool SpawnOnActivate = true;
 
-        public string OpenTrigger = "Open";
-        public string CloseTrigger = "Close";
+        [SerializeField] private string OpenTrigger = "Open";
+        [SerializeField] private string CloseTrigger = "Close";
 
         // internal
-        HashSet<int> spawnedEntityIds = new HashSet<int>();
-        Coroutine entranceCoroutine;
-        bool activated;
-        DungeonManager dm;
-        NetworkIdentity myIdentity;
+        HashSet<int> _spawnedEntityIds = new HashSet<int>();
+        Coroutine _entranceCoroutine;
+        bool _activated;
+        DungeonManager _dm;
+        NetworkIdentity _myIdentity;
 
         void Reset()
         {
@@ -57,12 +57,12 @@ namespace DungeonCrawler.Levels.Runtime
 
         private void Awake()
         {
-            myIdentity = this.GetComponent<NetworkIdentity>();
+            _myIdentity = this.GetComponent<NetworkIdentity>();
         }
 
         void Start()
         {
-            dm = UnityEngine.Object.FindFirstObjectByType<DungeonManager>();
+            _dm = UnityEngine.Object.FindFirstObjectByType<DungeonManager>();
             if (SpawnPoints == null || SpawnPoints.Length == 0)
                 FindSpawnPoints();
 
@@ -100,8 +100,8 @@ namespace DungeonCrawler.Levels.Runtime
 
         public void Activate()
         {
-            if (activated) return;
-            activated = true;
+            if (_activated) return;
+            _activated = true;
             SubscribeDeath();
             StartCoroutine(ActivateNextFrame());
         }
@@ -114,9 +114,9 @@ namespace DungeonCrawler.Levels.Runtime
 
         public void Deactivate()
         {
-            if (!activated) return;
-            activated = false;
-            if (entranceCoroutine != null) { StopCoroutine(entranceCoroutine); entranceCoroutine = null; }
+            if (!_activated) return;
+            _activated = false;
+            if (_entranceCoroutine != null) { StopCoroutine(_entranceCoroutine); _entranceCoroutine = null; }
             UnsubscribeDeath();
         }
 
@@ -125,20 +125,20 @@ namespace DungeonCrawler.Levels.Runtime
             yield return new WaitForSeconds(Mathf.Max(0f, EntranceOpenDuration));
             if (TeleportPlayersOnClose) TeleportPlayersNotInside();
             CloseEntrance();
-            entranceCoroutine = null;
+            _entranceCoroutine = null;
         }
 
         public void SpawnEnemies()
         {
             if (SpawnPoints == null || SpawnPoints.Length == 0) FindSpawnPoints();
 
-            spawnedEntityIds.Clear();
+            _spawnedEntityIds.Clear();
 
             Debug.Log($"{name}: Server spawning enemies (spawn points: {SpawnPoints?.Length ?? 0})");
 
             foreach (var spoint in SpawnPoints)
             {
-                if (spoint == null || spoint.GetPrefab() == null || spoint.Quantity <= 0) continue;
+                if (spoint == null || spoint.GetPrefab() == null || spoint.GetQuantity <= 0) continue;
 
                 var prefab = spoint.GetPrefab();
                 if (NetworkManager.singleton != null && !NetworkManager.singleton.spawnPrefabs.Contains(prefab))
@@ -146,8 +146,8 @@ namespace DungeonCrawler.Levels.Runtime
                     Debug.LogError($"{name}: Prefab {prefab.name} is NOT registered in NetworkManager.spawnPrefabs. Add it there or NetworkServer.Spawn will fail.");
                 }
 
-                var positions = new List<Vector3>(spoint.Quantity);
-                for (int i = 0; i < spoint.Quantity; i++) positions.Add(spoint.GetSpawnPosition());
+                var positions = new List<Vector3>(spoint.GetQuantity);
+                for (int i = 0; i < spoint.GetQuantity; i++) positions.Add(spoint.GetSpawnPosition());
 
                 var spawned = SpawnMany(prefab, positions);
                 if (spawned == null) continue;
@@ -156,11 +156,11 @@ namespace DungeonCrawler.Levels.Runtime
                 {
                     if (go == null) continue;
                     var ent = go.GetComponent<Entity>();
-                    if (ent != null) spawnedEntityIds.Add(ent.Id);
+                    if (ent != null) _spawnedEntityIds.Add(ent.Id);
                 }
             }
 
-            if (spawnedEntityIds.Count == 0)
+            if (_spawnedEntityIds.Count == 0)
             {
                 RoomCleared();
             }
@@ -186,15 +186,15 @@ namespace DungeonCrawler.Levels.Runtime
         {
             if (ev == null || ev.SourceEntity == null) return;
             int deadId = ev.SourceEntity.Id;
-            if (spawnedEntityIds.Remove(deadId))
+            if (_spawnedEntityIds.Remove(deadId))
             {
-                if (spawnedEntityIds.Count == 0) RoomCleared();
+                if (_spawnedEntityIds.Count == 0) RoomCleared();
             }
         }
 
         void RoomCleared()
         {
-            if (dm != null) dm.NotifyRoomCleared(this);
+            if (_dm != null) _dm.NotifyRoomCleared(this);
             else Debug.LogWarning("Dungeon Manager wasn't found. Ensure there is only one Dm in the scene. Or the room didn't spawn enemies");
 
             Debug.Log($"Room {this.name} was cleared, opening all exits");
@@ -209,8 +209,8 @@ namespace DungeonCrawler.Levels.Runtime
             var d = Doors[0];
             if (d == null) return;
             OpenDoor(0);
-            if (entranceCoroutine != null) StopCoroutine(entranceCoroutine);
-            entranceCoroutine = StartCoroutine(EntranceTimer());
+            if (_entranceCoroutine != null) StopCoroutine(_entranceCoroutine);
+            _entranceCoroutine = StartCoroutine(EntranceTimer());
         }
 
         [Server]
@@ -280,7 +280,7 @@ namespace DungeonCrawler.Levels.Runtime
                 teleported++;
             }
 
-            if (dm != null) dm.NotifyPlayersInside(this);
+            if (_dm != null) _dm.NotifyPlayersInside(this);
             else Debug.LogWarning("Dungeon Manager wasn't found. Ensure there is only one Dm in the scene");
         }
 
@@ -351,8 +351,8 @@ namespace DungeonCrawler.Levels.Runtime
             RpcSetDoorState(index, true);
 
             if (!isServer) yield return null;
-            if (myIdentity == null) myIdentity = GetComponentInParent<NetworkIdentity>();
-            if (myIdentity == null)
+            if (_myIdentity == null) _myIdentity = GetComponentInParent<NetworkIdentity>();
+            if (_myIdentity == null)
             {
                 Debug.LogWarning($"{name}: No NetworkIdentity found — cannot sync door '{door.name}'. Applying locally only.");
                 yield return null;
@@ -369,8 +369,8 @@ namespace DungeonCrawler.Levels.Runtime
             RpcSetDoorState(index, false);
 
             if (!isServer) return;
-            if (myIdentity == null) myIdentity = GetComponentInParent<NetworkIdentity>();
-            if (myIdentity == null)
+            if (_myIdentity == null) _myIdentity = GetComponentInParent<NetworkIdentity>();
+            if (_myIdentity == null)
             {
                 Debug.LogWarning($"{name}: No NetworkIdentity found — cannot sync door '{door.name}'. Applying locally only.");
                 return;

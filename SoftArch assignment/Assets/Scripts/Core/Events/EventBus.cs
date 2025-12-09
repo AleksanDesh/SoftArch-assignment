@@ -83,16 +83,24 @@ namespace DungeonCrawler.Core.Events
             if (handler == null) return;
             var type = typeof(T);
 
-            Action<GameEvent> wrapper = ev =>
-            {
-                if (ev is T te) handler(te);
-            };
-
             if (!_subscribers.TryGetValue(type, out var list))
             {
                 list = new List<(Delegate, Action<GameEvent>)>();
                 _subscribers[type] = list;
             }
+
+            // Prevent duplicate subscriptions of the same handler
+            foreach (var entry in list)
+            {
+                if (Delegate.Equals(entry.typedHandler, handler))
+                    return;
+            }
+
+            Action<GameEvent> wrapper = ev =>
+            {
+                if (ev is T te) handler(te);
+            };
+
             list.Add((handler, wrapper));
         }
 

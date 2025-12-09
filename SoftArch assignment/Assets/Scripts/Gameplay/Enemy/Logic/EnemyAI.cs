@@ -54,7 +54,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
         Entity _target;
         float _aggroTimer = 0f;
         float _attackTimer = 0f;
-        bool stunned = false;
+        bool _stunned = false;
 
 
         #region Network
@@ -163,7 +163,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             {
                 if (_movementController != null)
                 {
-                    if (!stunned)
+                    if (!_stunned)
                         _movementController.MoveTo(_target.transform.position);
                     else
                         _movementController.Stop();
@@ -173,7 +173,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
                     if (_agent.isOnNavMesh)
                     {
                         if (!_agent.enabled) _agent.enabled = true;
-                        if (!stunned && _agent.isStopped) _agent.isStopped = false;
+                        if (!_stunned && _agent.isStopped) _agent.isStopped = false;
 
                         _agent.SetDestination(_target.transform.position);
                     }

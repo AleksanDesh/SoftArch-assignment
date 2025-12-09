@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f7cccebc4c945c4a9374fa0968f3a58, type: 3}
+  m_Name: QuestExplanation
+  m_EditorClassIdentifier: 
+  questID: H6b2fc5ed-c74b-4f71-a68a-bb574bb80a86
+  questName: How is this quest called?
+  description: Add description to the quest, that will be displayer on the GUI at
+    some point
+  objectives:
+  - objectiveID: Objective title, that is displayed
+    description: What has to be done? *Adjust Type accordingy*
+    type: 0
+    requiredAmount: 0
+    currentAmount: 0
+    targetName: The name of whatever has to be tracked.

@@ -23,8 +23,14 @@ MonoBehaviour:
     currentAmount: 0
     targetName: DEBUG ENEMY
   - objectiveID: 2
-    description: Collect 2 Debug Items
+    description: Collect 8 Debug Items
     type: 0
     requiredAmount: 8
     currentAmount: 0
     targetName: Debug Item
+  - objectiveID: 3
+    description: Kill 8 debug enemies
+    type: 1
+    requiredAmount: 8
+    currentAmount: 0
+    targetName: DEBUG ENEMY

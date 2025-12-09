@@ -9,7 +9,7 @@ namespace DungeonCrawler.Systems.Stats
     public class LevelSystem : MonoBehaviour
     {
         [Tooltip("Default LevelConfig used if an ActorStats has no override.")]
-        public LevelConfig DefaultConfig;
+        [SerializeField] private LevelConfig DefaultConfig;
 
         void Start()
         {
