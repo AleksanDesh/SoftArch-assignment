@@ -1,21 +1,29 @@
 using TMPro;
 using UnityEngine;
+using DungeonCrawler.Gameplay.Combat;
 
-public class CaveBoss : MonoBehaviour
+namespace DungeonCrawler.Gameplay.Boss.FirstBoss
 {
-
-    private BossStateMachine currentStateMachine;
-    private CaveBossStateMachineStage1 fsm;
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public class CaveBoss : MonoBehaviour
     {
-        currentStateMachine = fsm;
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        currentStateMachine.Update();
+        private BossStateMachine _currentStateMachine;
+        private CaveBossStateMachineStage1 _fsm;
+
+        Health _health;
+
+        // Start is called once before the first execution of Update after the MonoBehaviour is created
+        void Start()
+        {
+            _health = GetComponent<Health>();
+            _fsm = GetComponent<CaveBossStateMachineStage1>();
+            _currentStateMachine = _fsm;
+        }
+
+        // Update is called once per frame
+        void Update()
+        {
+            _currentStateMachine.Update();
+        }
     }
 }

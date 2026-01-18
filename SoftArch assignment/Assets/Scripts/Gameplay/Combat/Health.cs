@@ -5,6 +5,7 @@ using DungeonCrawler.Gameplay.Stats.Rewards;
 using Mirror;
 using NaughtyAttributes;
 using System;
+using System.Collections;
 using UnityEngine;
 
 
@@ -17,7 +18,8 @@ namespace DungeonCrawler.Gameplay.Combat
     {
 
         [SerializeField] private int MaxHP = 50;
-        [SyncVar]
+        public Action<Health> onHealthChanged;
+        [SyncVar(hook = nameof(OnCurrentHpChanged))]
         private int CurrentHP;
 
         Entity _entity;
@@ -25,16 +27,17 @@ namespace DungeonCrawler.Gameplay.Combat
         //[Expandable]
         public bool godMode = false;
 
-        void Start()
+        void Awake()
         {
             _entity = GetComponent<Entity>();
             CurrentHP = MaxHP;
         }
 
-        [Server]
+        //[ServerCallback]
         public void RestoreHp()
         {
             CurrentHP = MaxHP;
+            onHealthChanged?.Invoke(this);
         }
 
         [ServerCallback]
@@ -42,6 +45,7 @@ namespace DungeonCrawler.Gameplay.Combat
         {
             if (amount <= 0 || godMode) return;
             CurrentHP -= amount;
+            //InformHealthChange();
             //Debug.Log($"{name} took {amount} damage from {damager.name}. HP: {CurrentHP}/{MaxHP}");
 
             if (CurrentHP <= 0)
@@ -66,9 +70,33 @@ namespace DungeonCrawler.Gameplay.Combat
         }
 
 
+        [ServerCallback]
+        public void SetMaxHp(int value)
+        {
+            MaxHP = value;
+            onHealthChanged?.Invoke(this);
+        }
+
+        public void Heal(int amount)
+        {
+            if (amount <= 0) return;
+            CurrentHP = Mathf.Min(CurrentHP + amount, MaxHP);
+            onHealthChanged?.Invoke(this);
+        }
+
         public int GetCurrentHp()
         {
             return CurrentHP;
+        }
+
+        public int GetMaxHP()
+        {
+            return MaxHP; 
+        }
+
+        void OnCurrentHpChanged(int oldValue, int newValue)
+        {
+            onHealthChanged?.Invoke(this);
         }
     }
 }

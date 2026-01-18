@@ -1,9 +1,10 @@
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Utils;
+using Mirror;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WeaponCollisionCheck : MonoBehaviour
+public class WeaponCollisionCheck : NetworkBehaviour
 {
     [SerializeField] private Entity userEntity;
 
@@ -14,6 +15,8 @@ public class WeaponCollisionCheck : MonoBehaviour
         if (userEntity == null)
             Debug.LogWarning($"{this} doesn't have a userEntity, please assign it in the inspector");
     }
+
+    [Server]
     private void OnTriggerEnter(Collider other)
     {
         if (userEntity == null)

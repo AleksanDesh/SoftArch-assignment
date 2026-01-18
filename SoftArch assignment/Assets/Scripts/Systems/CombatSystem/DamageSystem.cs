@@ -1,12 +1,13 @@
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Utils;
 using DungeonCrawler.Gameplay.Combat;
+using Mirror;
 using UnityEngine;
 
 namespace DungeonCrawler.Systems.CombatSystem
 {
     // A centralized system that listens for TrapTriggeredEvent and DamageEvent
-    public class DamageSystem : MonoBehaviour
+    public class DamageSystem : NetworkBehaviour
     {
         void Start()
         {
@@ -33,6 +34,7 @@ namespace DungeonCrawler.Systems.CombatSystem
             // ev.Consumed = true;
         }
 
+        [Server]
         void OnDamageEvent(DamageEvent ev)
         {
             if (ev.Consumed) return;
