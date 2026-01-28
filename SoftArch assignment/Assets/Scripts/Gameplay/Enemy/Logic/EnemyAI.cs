@@ -18,8 +18,8 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
     public class EnemyAI : NetworkBehaviour
     {
         [Header("Targeting / Aggro")]
-        [Tooltip("Which entity tag to consider 'player' (alternatively register player with EntityManager and set PlayerTag to empty).")]
-        public string PlayerTag = "Player";
+        //[Tooltip("Which entity tag to consider 'player' (alternatively register player with EntityManager and set PlayerTag to empty).")]
+        //public string PlayerTag = "Player";
         public float AggroRange = 10f;
         [Tooltip("How long (seconds) the enemy remains aggressive after losing sight / leaving aggro range.")]
         public float AggroDuration = 3f;
@@ -41,7 +41,14 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
         public MonoBehaviour MovementControllerComponent;
         [Tooltip("Assign the attack handler component that implements IAttackHandler, or leave null to auto-detect.")]
         public MonoBehaviour AttackHandlerComponent;
-
+        [Header("Animator (optional)")]
+        [Tooltip("Assign an Animator (will fallback to GetComponentInChildren<Animator> if null).")]
+        public Animator animator;
+        [Header("Attack timing (visual/motion lock in seconds)")]
+        public float AttackWindUp = 0.25f;
+        public float AttackRelease = 0.5f;
+        public float RotationSpeed = 10f;
+        bool _isPerformingAttack = false;
         // internal cached refs
         Entity _entity;
         NavMeshAgent _agent;
@@ -73,6 +80,10 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
         {
             _entity = GetComponent<Entity>();
             _agent = GetComponent<NavMeshAgent>();
+
+            if (animator == null)
+                animator = GetComponentInChildren<Animator>();
+
             _agent.stoppingDistance = StoppingDistance;
 
             // Apply archetype overrides if present
@@ -126,6 +137,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             }
         }
 
+        // NOTE: minor rename fix vs earlier snippet (private field)
         void AttackHanlderInitialize(IAttackHandler handler)
         {
             _attackHandler = handler;
@@ -142,14 +154,18 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             if (_aggroTimer > 0f) _aggroTimer -= dt;
             if (_attackTimer > 0f) _attackTimer -= dt;
 
-
             // Acquire or refresh the closest player target from the registry if needed
             if (_target == null || _target.gameObject.GetComponent<Health>().GetCurrentHp() <= 0)
             {
                 _target = GetClosestPlayerFromRegistry();
             }
 
-            if (_target == null) return;
+            if (_target == null)
+            {
+                // set idle animation
+                SetAnimatorWalk(false);
+                return;
+            }
 
             float distSqr = (_target.transform.position - transform.position).sqrMagnitude;
             bool inAggroRange = distSqr <= AggroRange * AggroRange;
@@ -161,43 +177,71 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
 
             if (_aggroTimer > 0f)
             {
+                // Movement: only move if not stunned and not locked by an ongoing attack animation
                 if (_movementController != null)
                 {
-                    if (!_stunned)
+                    if (!_stunned && !_isPerformingAttack)
+                    {
                         _movementController.MoveTo(_target.transform.position);
+                        SetAnimatorWalk(true);
+                    }
                     else
+                    {
                         _movementController.Stop();
+                        SetAnimatorWalk(false);
+                    }
                 }
                 else
                 {
                     if (_agent.isOnNavMesh)
                     {
                         if (!_agent.enabled) _agent.enabled = true;
-                        if (!_stunned && _agent.isStopped) _agent.isStopped = false;
 
-                        _agent.SetDestination(_target.transform.position);
+                        // stop the agent while performing attack
+                        if (!_stunned && !_isPerformingAttack)
+                        {
+                            if (_agent.isStopped) _agent.isStopped = false;
+                            _agent.SetDestination(_target.transform.position);
+                            SetAnimatorWalk(true);
+                        }
+                        else
+                        {
+                            if (!_agent.isStopped) _agent.isStopped = true;
+                            SetAnimatorWalk(false);
+                        }
                     }
                     else
                     {
                         Debug.Log("Agent is not on a NavMesh");
+                        SetAnimatorWalk(false);
                     }
                 }
 
+                // Attack decision
                 if (distSqr <= AttackRange * AttackRange && _attackTimer <= 0f)
                 {
+                    // Before initiating attack — force stop movement so the attack animation/play is clean.
+                    if (_movementController != null)
+                        _movementController.Stop();
+                    else if (_agent.isOnNavMesh)
+                        _agent.isStopped = true;
+
+                    // face the target immediately (so attack anim looks correct)
+                    FaceTarget(_target.transform);
+
                     bool attacked = false;
                     if (_attackHandler != null)
                     {
                         attacked = _attackHandler.TryAttack(_target);
                     }
-                    else
-                    {
-                        attacked = TryAttackTargetFallback();
-                    }
 
                     if (attacked)
                     {
                         _attackTimer = AttackCooldown;
+
+                        // lock movement locally for the duration of the attack animation so Update doesn't re-enable movement
+                        _isPerformingAttack = true;
+                        StartCoroutine(ClearAttackLockAfter(AttackWindUp + AttackRelease));
                     }
                 }
             }
@@ -212,7 +256,37 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
                     _agent.ResetPath();
                     _agent.isStopped = true;
                 }
+
+                SetAnimatorWalk(false);
             }
+        }
+
+        IEnumerator ClearAttackLockAfter(float t)
+        {
+            yield return new WaitForSeconds(t);
+            _isPerformingAttack = false;
+        }
+
+        void FaceTarget(Transform target)
+        {
+            if (target == null) return;
+
+            Vector3 direction = target.position - transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.001f) return;
+
+            Quaternion lookRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Lerp(transform.rotation, lookRotation, Time.deltaTime * RotationSpeed);
+        }
+
+        void SetAnimatorWalk(bool v)
+        {
+            if (animator != null) animator.SetBool("isWalk", v);
+        }
+
+        void SetAnimatorAttack(bool v)
+        {
+            if (animator != null) animator.SetBool("isAttack", v);
         }
 
 
@@ -253,25 +327,6 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
             }
 
             return best; // null if none within AggroRange
-        }
-
-        // fallback direct attack logic 
-        bool TryAttackTargetFallback()
-        {
-            if (_target == null) return false;
-            Debug.Log("Fallback attack");
-
-            var health = _target.GetComponent<Health>();
-            if (health != null)
-            {
-                health.ApplyDamage(AttackDamage, _entity);
-                return true;
-            }
-            else
-            {
-                Debug.Log($"{name} attacked {_target.name} for {AttackDamage}, but target has no Health component.");
-                return false;
-            }
         }
 
         void OnDrawGizmosSelected()

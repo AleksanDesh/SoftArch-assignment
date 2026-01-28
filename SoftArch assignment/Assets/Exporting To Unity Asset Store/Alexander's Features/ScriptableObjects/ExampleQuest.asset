@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 630b8a236c463bf4dab6f935cd529238, type: 3}
+  m_Name: ExampleQuest
+  m_EditorClassIdentifier: 
+  questID: S6bc53601-016c-4cbb-884d-e0afbce97aa5
+  questName: ShowHowIWork
+  description: 
+  objectives:
+  - objectiveID: 1
+    description: Collect 2 ExampleItems
+    type: 0
+    requiredAmount: 2
+    currentAmount: 0
+    targetName: ExampleItem
+  - objectiveID: 2
+    description: Kill 2 Examples
+    type: 1
+    requiredAmount: 2
+    currentAmount: 0
+    targetName: ExampleEnemy

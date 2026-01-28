@@ -1,3 +1,4 @@
+using System;
 using DungeonCrawler.Core.Utils;
 using DungeonCrawler.Gameplay.Items.Data;
 using DungeonCrawler.Systems.Gameflow;
@@ -19,6 +20,17 @@ namespace DungeonCrawler.Gameplay.Inventory.Model
 
         // Expose readonly list
         public IReadOnlyList<InventorySlot> Slots => slots.AsReadOnly();
+
+
+        // Parameter is slot index that changed.
+        public Action<int> OnSlotChanged;
+
+        /// <summary>
+        /// Invoked when a slot item is 'used' (slot index).
+        /// For consumables this will normally be fired indirectly via OnSlotChanged when RemoveAt is called.
+        /// For non-consumables this fires when Use() handles the action.
+        /// </summary>
+        public Action<int> OnSlotUsed;
 
         void Awake()
         {
@@ -61,6 +73,7 @@ namespace DungeonCrawler.Gameplay.Inventory.Model
                         s.Quantity += addNow;
                         toAdd -= addNow;
                         slots[i] = s;
+                        OnSlotChanged?.Invoke(i);
                     }
                 }
             }
@@ -74,6 +87,7 @@ namespace DungeonCrawler.Gameplay.Inventory.Model
                     int put = Mathf.Min(def.MaxStack, toAdd);
                     slots[i] = new InventorySlot(def, put);
                     toAdd -= put;
+                    OnSlotChanged?.Invoke(i);
                 }
             }
 
@@ -91,6 +105,8 @@ namespace DungeonCrawler.Gameplay.Inventory.Model
             s.Quantity -= removed;
             if (s.Quantity <= 0) slots[slotIndex] = new InventorySlot(null, 0);
             else slots[slotIndex] = s;
+
+            OnSlotChanged?.Invoke(slotIndex);
             return removed;
         }
 
@@ -121,18 +137,28 @@ namespace DungeonCrawler.Gameplay.Inventory.Model
             if (s.IsEmpty) return false;
 
             // Example: if consumable, reduce and call OnUse hooks
-            if (s.Definition.IsConsumable)
+            if (s.Definition.IsConsumable && s.Definition.CanUse(this.gameObject))
             {
-                // TODO: trigger effects (health restore, buff, etc.) via event or direct call
-                // Placeholder: just remove one
-                RemoveAt(slotIndex, 1);
-                return true;
+                
+                bool used = s.Definition.Use(this.gameObject, slotIndex);
+                if (used)
+                {
+                    RemoveAt(slotIndex, 1); //  TODO: server-side removal 
+                    // TODO: trigger effects (health restore, buff, etc.) via event or direct call
+                    OnSlotChanged?.Invoke(slotIndex);
+                    OnSlotUsed?.Invoke(slotIndex);
+                    return true;
+                }
+                return false;
             }
             else
             {
+                // Currently nothing, but:
                 // Non-consumable: equip or open UI
-                // return true to say action handled
-                return true;
+                // notify listeners that a use action occurred (UI might open details / equip, etc.)
+                // OnSlotChanged?.Invoke(slotIndex);
+                // OnSlotUsed?.Invoke(slotIndex);
+                return false;
             }
         }
 

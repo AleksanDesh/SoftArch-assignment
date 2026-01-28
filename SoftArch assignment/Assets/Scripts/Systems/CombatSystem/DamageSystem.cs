@@ -24,6 +24,16 @@ namespace DungeonCrawler.Systems.CombatSystem
             }
         }
 
+
+        bool InstaKill = false;
+        void Update()
+        {
+            if(Input.GetKeyDown(KeyCode.K))
+            {
+                InstaKill = !InstaKill;
+            }
+        }
+
         // Consider removing this, and working through damage event + passing debuff data
         void OnTrapTriggered(TrapTriggeredEvent ev)
         {
@@ -43,7 +53,7 @@ namespace DungeonCrawler.Systems.CombatSystem
             var health = target.GetComponent<Health>();
             if (health == null) return;
 
-            health.ApplyDamage(ev.Amount, ev.SourceEntity);
+            health.ApplyDamage(ev.Amount, ev.SourceEntity, InstaKill);
 
             // Optionally consume event
             ev.Consumed = true;

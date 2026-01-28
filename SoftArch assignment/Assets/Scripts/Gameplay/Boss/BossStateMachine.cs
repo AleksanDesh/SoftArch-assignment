@@ -15,12 +15,12 @@ namespace DungeonCrawler.Gameplay.Boss
     public class BossStateMachine : NetworkBehaviour
     {
         [Header("Movement / Ranges")]
-        protected NavMeshAgent navMeshAgent;
+        protected NavMeshAgent Agent;
         protected BossBlackboard Blackboard;
 
         [Header("Animation")]
         [SerializeField]
-        protected Animator Animator;
+        public Animator Animator;
         [SerializeField]
         protected NetworkAnimator NetAnimator;
 
@@ -49,26 +49,30 @@ namespace DungeonCrawler.Gameplay.Boss
 
         public virtual void Update()
         {
-            DebugInfo();
+
 
             if (_currentTarget == null)
             {
                 SearchForTarget();
             }
-            _currentState.Step();
-            if (_currentState.NextState() != null)
+            if (_currentState != null)
             {
-                //Cache the next state, because after currentState.Exit, calling
-                //currentState.NextState again might return null because of change
-                //of context.
-                State nextState = _currentState.NextState();
-                _currentState.Exit();
-                _currentState = nextState;
-                _currentState.Enter();
-
-                if (EnableDebug)
+                _currentState.Step();
+                if (_currentState.NextState() != null)
                 {
-                    Debug.Log($"[FSM] Transition: {_currentState.StateName} -> {nextState.StateName}");
+                    //Cache the next state, because after currentState.Exit, calling
+                    //currentState.NextState again might return null because of change
+                    //of context.
+                    State nextState = _currentState.NextState();
+                    _currentState.Exit();
+                    _currentState = nextState;
+                    _currentState.Enter();
+
+                    if (EnableDebug)
+                    {
+                        DebugInfo();
+                        Debug.Log($"[FSM] Transition: {_currentState.StateName} -> {nextState.StateName}");
+                    }
                 }
             }
         }

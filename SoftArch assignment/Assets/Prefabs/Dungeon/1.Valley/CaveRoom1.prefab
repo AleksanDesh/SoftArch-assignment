@@ -2772,8 +2772,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   EnemyPrefabs:
-  - {fileID: 2467087090718844556, guid: 64c080a53072e6544928c05b92f4bc16, type: 3}
-  Quantity: 1
+  - {fileID: 2970939969433347827, guid: caf0d12ba1725ab41bd480dbaf7cacc3, type: 3}
+  Quantity: 2
   JitterRadius: 0.3
 --- !u!1 &954019199388668561
 GameObject:

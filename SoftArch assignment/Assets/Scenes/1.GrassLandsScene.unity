@@ -143,6 +143,10 @@ PrefabInstance:
       propertyPath: sceneId
       value: 410554111
       objectReference: {fileID: 0}
+    - target: {fileID: 1598829541603077400, guid: 2f3ee04bb16dfd14980bc9a69ecc984b, type: 3}
+      propertyPath: 'EnemyPrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2970939969433347827, guid: caf0d12ba1725ab41bd480dbaf7cacc3, type: 3}
     - target: {fileID: 1714058094727602668, guid: 2f3ee04bb16dfd14980bc9a69ecc984b, type: 3}
       propertyPath: m_Name
       value: Dungeon
@@ -155,10 +159,30 @@ PrefabInstance:
       propertyPath: m_CastShadows
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3157370777662546033, guid: 2f3ee04bb16dfd14980bc9a69ecc984b, type: 3}
+      propertyPath: 'EnemyPrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2970939969433347827, guid: caf0d12ba1725ab41bd480dbaf7cacc3, type: 3}
+    - target: {fileID: 4653620504257596939, guid: 2f3ee04bb16dfd14980bc9a69ecc984b, type: 3}
+      propertyPath: Quantity
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4653620504257596939, guid: 2f3ee04bb16dfd14980bc9a69ecc984b, type: 3}
+      propertyPath: 'EnemyPrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2970939969433347827, guid: caf0d12ba1725ab41bd480dbaf7cacc3, type: 3}
+    - target: {fileID: 6341198483913622066, guid: 2f3ee04bb16dfd14980bc9a69ecc984b, type: 3}
+      propertyPath: 'EnemyPrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2970939969433347827, guid: caf0d12ba1725ab41bd480dbaf7cacc3, type: 3}
     - target: {fileID: 6497872845365660476, guid: 2f3ee04bb16dfd14980bc9a69ecc984b, type: 3}
       propertyPath: sceneId
       value: 826786418
       objectReference: {fileID: 0}
+    - target: {fileID: 6678135612495702879, guid: 2f3ee04bb16dfd14980bc9a69ecc984b, type: 3}
+      propertyPath: 'EnemyPrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2970939969433347827, guid: caf0d12ba1725ab41bd480dbaf7cacc3, type: 3}
     - target: {fileID: 7437065817768669566, guid: 2f3ee04bb16dfd14980bc9a69ecc984b, type: 3}
       propertyPath: m_LocalPosition.x
       value: -4.65

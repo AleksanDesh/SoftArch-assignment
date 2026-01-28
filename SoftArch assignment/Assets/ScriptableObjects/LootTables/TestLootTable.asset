@@ -16,5 +16,9 @@ MonoBehaviour:
   - Item: {fileID: 11400000, guid: d65f9d7183ffe564eb7dcef80ce4490f, type: 2}
     Chance: 1
     MinQuantity: 1
-    MaxQuantity: 3
+    MaxQuantity: 2
+  - Item: {fileID: 11400000, guid: 521c51cd4196604449fe596b5b77531d, type: 2}
+    Chance: 1
+    MinQuantity: 1
+    MaxQuantity: 4
   Rolls: 1

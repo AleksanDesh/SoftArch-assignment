@@ -21,7 +21,7 @@ namespace DungeonCrawler.Gameplay.Combat
         public Action<Health> onHealthChanged;
         [SyncVar(hook = nameof(OnCurrentHpChanged))]
         private int CurrentHP;
-
+        
         Entity _entity;
 
         //[Expandable]
@@ -33,18 +33,20 @@ namespace DungeonCrawler.Gameplay.Combat
             CurrentHP = MaxHP;
         }
 
-        //[ServerCallback]
+        [ServerCallback]
         public void RestoreHp()
         {
             CurrentHP = MaxHP;
             onHealthChanged?.Invoke(this);
         }
 
+
         [ServerCallback]
-        public void ApplyDamage(int amount, Entity damager)
+        public void ApplyDamage(int amount, Entity damager, bool InstaKill = false)
         {
             if (amount <= 0 || godMode) return;
             CurrentHP -= amount;
+            if (InstaKill) CurrentHP = 0;
             //InformHealthChange();
             //Debug.Log($"{name} took {amount} damage from {damager.name}. HP: {CurrentHP}/{MaxHP}");
 

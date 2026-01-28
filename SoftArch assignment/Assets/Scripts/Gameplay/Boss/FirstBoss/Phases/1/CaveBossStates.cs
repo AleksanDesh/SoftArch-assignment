@@ -9,7 +9,7 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
     public class IdleState : Gameplay.Boss.State
     {
         protected Gameplay.Boss.BossStateMachine owner;
-        float timer = 0f;
+        float timer = 1f;
         float wait = 1f;
 
         public IdleState(Gameplay.Boss.BossStateMachine owner)
@@ -21,7 +21,7 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
         public override void Enter()
         {
             base.Enter();
-            
+            owner.Animator.SetBool("Idle", true);
             timer = 0f;
         }
 
@@ -37,6 +37,7 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
         // Can be overridden by derived states to perform cleanup logic.
         public override void Exit()
         {
+            owner.Animator.SetBool("Idle", false);
             base.Exit();
         }
     }
@@ -45,7 +46,7 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
     public class MeleeAttackState : Gameplay.Boss.State
     {
         protected Gameplay.Boss.BossStateMachine owner;
-        float attackDuration = 0.8f;
+        float attackDuration = 1.8f;
         float timer;
 
         public MeleeAttackState(Gameplay.Boss.BossStateMachine owner)
@@ -59,6 +60,7 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
             base .Enter();
             timer = 0f;
             // TODO: play VFX, deal damage to player (call player's health / damage)
+            owner.Animator.SetBool("Melee", true);
         }
 
         public override void Step()
@@ -73,18 +75,19 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
 
         public override void Exit()
         {
+            owner.Animator.SetBool("Melee", false);
             base.Exit();
         }
     }
 
     // Ranged attack
-    public class RangedAttack : Gameplay.Boss.State
+    public class RangedAttackState : Gameplay.Boss.State
     {
         protected Gameplay.Boss.BossStateMachine owner;
-        float duration = 0.6f;
+        float duration = 1.6f;
         float timer;
 
-        public RangedAttack(Gameplay.Boss.BossStateMachine owner)
+        public RangedAttackState(Gameplay.Boss.BossStateMachine owner)
         {
             this.owner = owner;
             StateName = "RangedAttack";
@@ -94,7 +97,9 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
         {
             base.Enter();
             timer = 0f;
+
             // TODO: instantiate projectile / do ranged damage
+            owner.Animator.SetBool("Ranged", true);
         }
 
         public override void Step()
@@ -109,6 +114,7 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
 
         public override void Exit()
         {
+            owner.Animator.SetBool("Ranged", false);
             base.Exit();
         }
     }
@@ -118,7 +124,7 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
     {
         protected Gameplay.Boss.BossStateMachine owner;
         float timer;
-        float healDuration = 1.2f;
+        float healDuration = 2.2f;
         int healAmount = 15;
 
         public HealState(Gameplay.Boss.BossStateMachine owner)
@@ -131,13 +137,8 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
         {
             base.Enter();
             timer = 0f;
-            // call health heal (server-side in networked env)
-            var health = owner.GetComponent<Health>();
-            if (health != null)
-            {
-                // For networked games, ensure Heal is called on server.
-                health.Heal(healAmount);
-            }
+            owner.Animator.SetBool("Heal", true);
+
         }
 
         public override void Step()
@@ -146,12 +147,20 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
             if (timer >= healDuration)
             {
                 IsFinished = true;
+                // call health heal (server-side in networked env)
+                var health = owner.GetComponent<Health>();
+                if (health != null)
+                {
+                    // For networked games, ensure Heal is called on server.
+                    health.Heal(healAmount);
+                }
             }
             // nothing else - transitions will return to idle
         }
 
         public override void Exit()
         {
+            owner.Animator.SetBool("Heal", false);
             base.Exit();
         }
     }
@@ -171,6 +180,7 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
         public override void Enter()
         {
             base.Enter();
+            owner.Animator.SetBool("Death", true);
             if (!started)
             {
                 started = true;
@@ -181,7 +191,7 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
         System.Collections.IEnumerator DeathCoroutine()
         {
             // give some time for death animation / events
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(5.0f);
             // disable gameobject
             Debug.Log($"{this} has died");
             owner.gameObject.SetActive(false);
@@ -190,6 +200,7 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
         public override void Exit()
         {
             base.Exit();
+            owner.Animator.SetBool("Death", false);
         }
     }
 }

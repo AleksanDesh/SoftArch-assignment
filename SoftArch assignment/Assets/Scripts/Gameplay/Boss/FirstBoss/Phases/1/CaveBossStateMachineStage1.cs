@@ -14,10 +14,10 @@ namespace DungeonCrawler.Gameplay.Boss
 
         protected override void Start()
         {
-            Blackboard = GetComponent<BossBlackboard>();
+            Blackboard = GetComponent<CaveBossBlackboard>();
             if (Blackboard == null)
             {
-                Blackboard = gameObject.AddComponent<BossBlackboard>();
+                Blackboard = gameObject.AddComponent<CaveBossBlackboard>();
                 if (EnableDebug) Debug.Log("[FSM] No Blackboard found on boss; added default BossBlackboard.");
             }
 
@@ -28,7 +28,7 @@ namespace DungeonCrawler.Gameplay.Boss
             // create instances of states
             idle = new FirstBoss.IdleState(this);
             melee = new FirstBoss.MeleeAttackState(this);
-            ranged = new FirstBoss.RangedAttack(this);
+            ranged = new FirstBoss.RangedAttackState(this);
             heal = new FirstBoss.HealState(this);
             death = new FirstBoss.DeathState(this);
 
