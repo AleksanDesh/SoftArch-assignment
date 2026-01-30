@@ -21,8 +21,9 @@ namespace DungeonCrawler.Gameplay.Boss
         [Header("Animation")]
         [SerializeField]
         public Animator Animator;
+
         [SerializeField]
-        protected NetworkAnimator NetAnimator;
+        public NetworkAnimator NetAnimator;
 
         [Header("Debug / UI")]
         [SerializeField]
@@ -157,6 +158,13 @@ namespace DungeonCrawler.Gameplay.Boss
                 }
             }
             if (EnableDebug) Debug.Log($"[FSM] Found {_targets.Count} network players as targets. Primary = {_currentTarget?.name ?? "none"}");
+        }
+
+        [ClientRpc]
+        public void RpcShowVisualAttackCircleClue(Vector3 center, float radius, float duration, int segments)
+        {
+            // Create the visual clue locally on each client
+            VisualAttackCircleClue.Show(center, radius, duration, segments);
         }
 
         void DebugInfo()

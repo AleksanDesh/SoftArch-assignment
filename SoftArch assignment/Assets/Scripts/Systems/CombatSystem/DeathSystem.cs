@@ -45,6 +45,11 @@ namespace DungeonCrawler.Systems.CombatSystem
                 }
             }
 
+            if (entity.CompareTag("Boss"))
+            {
+                return;
+            }
+
             //Debug.Log($"Die call {ev.TimeCreated}, current time {Time.time}");
             entity.gameObject.SetActive(false);
             if (entity.gameObject.TryGetComponent<NetworkIdentity>(out var identity))

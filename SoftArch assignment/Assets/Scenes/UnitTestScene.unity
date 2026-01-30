@@ -5109,12 +5109,20 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4104435552891312464, guid: b4a839a3aab5ee84685747b96793911d, type: 3}
       propertyPath: spawnPrefabs.Array.size
-      value: 9
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 4104435552891312464, guid: b4a839a3aab5ee84685747b96793911d, type: 3}
       propertyPath: 'spawnPrefabs.Array.data[8]'
       value: 
       objectReference: {fileID: 2970939969433347827, guid: caf0d12ba1725ab41bd480dbaf7cacc3, type: 3}
+    - target: {fileID: 4104435552891312464, guid: b4a839a3aab5ee84685747b96793911d, type: 3}
+      propertyPath: 'spawnPrefabs.Array.data[9]'
+      value: 
+      objectReference: {fileID: 5970762746198869727, guid: 048cec043d6bdb344ae96fea996c7b8c, type: 3}
+    - target: {fileID: 4104435552891312464, guid: b4a839a3aab5ee84685747b96793911d, type: 3}
+      propertyPath: 'spawnPrefabs.Array.data[10]'
+      value: 
+      objectReference: {fileID: 6898722388589001911, guid: 86358b184d80f4247a8ca18e1b308874, type: 3}
     - target: {fileID: 5251949483766126206, guid: b4a839a3aab5ee84685747b96793911d, type: 3}
       propertyPath: m_Name
       value: NetworkManager
@@ -5897,10 +5905,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Skeleton Cultivator Boss
       objectReference: {fileID: 0}
-    - target: {fileID: 333529449407568781, guid: 9d36ede561541c945a84ead45b489ed4, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 1147080799932219703, guid: 9d36ede561541c945a84ead45b489ed4, type: 3}
       propertyPath: m_LocalPosition.x
       value: -3.2080157
@@ -5941,22 +5945,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1286098394819568592, guid: 9d36ede561541c945a84ead45b489ed4, type: 3}
-      propertyPath: DrawGizmos
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1286098394819568592, guid: 9d36ede561541c945a84ead45b489ed4, type: 3}
-      propertyPath: EnableDebug
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 1751676842138655959, guid: 9d36ede561541c945a84ead45b489ed4, type: 3}
       propertyPath: sceneId
       value: 914121767
       objectReference: {fileID: 0}
+    - target: {fileID: 7427140046147298644, guid: 9d36ede561541c945a84ead45b489ed4, type: 3}
+      propertyPath: DeathSpeed
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2070355975326671254, guid: 9d36ede561541c945a84ead45b489ed4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 9d36ede561541c945a84ead45b489ed4, type: 3}
 --- !u!1001 &2107656084
 PrefabInstance:
