@@ -341,18 +341,27 @@ namespace DungeonCrawler.Gameplay.Boss.FirstBoss
                 foreach (var hit in hits)
                 {
                     Entity playerEntity = hit.GetComponent<Entity>();
+                    Entity myEntity = owner.GetComponent<Entity>();
                     if (playerEntity != null && playerEntity.tag == "Player")
                     {
-                        EventBus.Instance?.Enqueue(new DamageEvent(playerEntity, owner.GetComponent<Entity>(), bb.DeathDamage));
+                        EventBus.Instance?.Enqueue(new DamageEvent(playerEntity, myEntity, bb.DeathDamage));
+                        SpawnBlowingEffect(bb.DeathEffectGameObject, hit.transform);
 
-                        var go = GameObject.Instantiate(bb.DeathEffectGameObject, hit.transform.position, Quaternion.identity, this.transform);
-                        var ps = go.GetComponent<ParticleSystem>();
-                        if (ps != null)
-                        {
-                            GameObject.Destroy(go, ps.main.duration + ps.main.startLifetime.constantMax);
-                        }
+                        // Destroy a bit later, so the entity is processed
+                        NetworkBehaviour.Destroy(transform.gameObject, 0.1f);
                     }
                 }
+            }
+        }
+
+        [ClientRpc]
+        void SpawnBlowingEffect(GameObject gm, Transform transform)
+        {
+            var go = GameObject.Instantiate(bb.DeathEffectGameObject, transform.position, Quaternion.identity);
+            var ps = go.GetComponent<ParticleSystem>();
+            if (ps != null)
+            {
+                GameObject.Destroy(go, ps.main.duration + ps.main.startLifetime.constantMax);
             }
         }
 

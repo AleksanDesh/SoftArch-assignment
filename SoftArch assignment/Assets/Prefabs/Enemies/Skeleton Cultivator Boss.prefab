@@ -369,13 +369,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxHP: 500
-  MeleeDamage: 20
+  MeleeDamage: 4
   RangedDamage: 12
-  MeleeRange: 6
+  MeleeRange: 4
   RangedRange: 20
   DebugNotes: 
   HealAmount: 30
-  HealDuration: 5
+  HealDuration: 4
   MeleeSpikePrefab: {fileID: 6898722388589001911, guid: 86358b184d80f4247a8ca18e1b308874, type: 3}
   MeleeAttackAnticipation: 0.7
   MeleeAttackDuration: 10
@@ -401,7 +401,7 @@ MonoBehaviour:
   SpikeDecelTime: 0.62
   SpikeAngleVariance: 25
   SpikeLifeAfterStop: 0.8
-  DeathEffectGameObject: {fileID: 0}
+  DeathEffectGameObject: {fileID: 1670039157676205174, guid: 531bfcc7d6b7f6c4391fe3bcbf0cb741, type: 3}
   DeathAnticipation: 3
   DeathSpeed: 10
   DeathDamage: 9999

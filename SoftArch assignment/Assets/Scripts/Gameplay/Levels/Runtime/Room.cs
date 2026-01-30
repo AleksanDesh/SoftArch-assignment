@@ -146,10 +146,14 @@ namespace DungeonCrawler.Levels.Runtime
                     Debug.LogError($"{name}: Prefab {prefab.name} is NOT registered in NetworkManager.spawnPrefabs. Add it there or NetworkServer.Spawn will fail.");
                 }
 
-                var positions = new List<Vector3>(spoint.GetQuantity);
-                for (int i = 0; i < spoint.GetQuantity; i++) positions.Add(spoint.GetSpawnPosition());
-
-                var spawned = SpawnMany(prefab, positions);
+                List<Transform> transforms = new List<Transform>(spoint.GetQuantity);
+                for (int i = 0; i < spoint.GetQuantity; i++)
+                {
+                    Transform newTransform = spoint.GetSpawnTransform();
+                    newTransform.position = spoint.GetSpawnPosition();
+                    transforms.Add(newTransform);
+                }
+                var spawned = SpawnMany(prefab, transforms);
                 if (spawned == null) continue;
 
                 foreach (var go in spawned)
@@ -323,12 +327,12 @@ namespace DungeonCrawler.Levels.Runtime
             return go;
         }
 
-        public List<GameObject> SpawnMany(GameObject prefab, IEnumerable<Vector3> positions)
+        public List<GameObject> SpawnMany(GameObject prefab, IEnumerable<Transform> transforms)
         {
             var list = new List<GameObject>();
-            foreach (var p in positions)
+            foreach (var tr in transforms)
             {
-                var go = Spawn(prefab, p, Quaternion.identity);
+                var go = Spawn(prefab, tr.position, tr.rotation);
                 if (go != null) list.Add(go);
             }
             return list;

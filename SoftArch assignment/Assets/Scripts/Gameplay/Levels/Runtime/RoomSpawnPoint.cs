@@ -26,6 +26,16 @@ namespace DungeonCrawler.Levels.Runtime
             return transform.position + new Vector3(rnd.x, 0f, rnd.y);
         }
 
+        public Quaternion GetSpawnRotation()
+        {
+            return transform.rotation;
+        }
+
+        public Transform GetSpawnTransform()
+        {
+            return transform; 
+        }
+
         public GameObject GetPrefab()
         {
             if (EnemyPrefabs.Count == 0) return null;

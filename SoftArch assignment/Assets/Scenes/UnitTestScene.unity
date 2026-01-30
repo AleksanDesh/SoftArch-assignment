@@ -5949,10 +5949,6 @@ PrefabInstance:
       propertyPath: sceneId
       value: 914121767
       objectReference: {fileID: 0}
-    - target: {fileID: 7427140046147298644, guid: 9d36ede561541c945a84ead45b489ed4, type: 3}
-      propertyPath: DeathSpeed
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
