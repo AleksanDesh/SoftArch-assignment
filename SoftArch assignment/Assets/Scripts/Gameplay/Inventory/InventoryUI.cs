@@ -13,14 +13,14 @@ namespace DungeonCrawler.Gameplay.Inventory
         Model.Inventory _inventory;
         Transform _slotParent;
         Dictionary<int, Transform> _indexReference = new Dictionary<int, Transform>();
-        bool settedUp = false;
+        bool _settedUp = false;
         private void OnEnable()
         {
             Setup();
         }
         void Setup()
         {
-            if (settedUp) return;
+            if (_settedUp) return;
             if (GameManager.Instance.localPlayer != null)
                 _inventory = GameManager.Instance.localPlayer.GetComponent<Model.Inventory>();
             else
@@ -44,7 +44,7 @@ namespace DungeonCrawler.Gameplay.Inventory
                 _indexReference.Add(i, go.transform);
                 UpdateSlot(i);
             }
-            settedUp = true;
+            _settedUp = true;
         }
 
 

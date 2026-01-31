@@ -1,5 +1,7 @@
 using DungeonCrawler.Core.Events;
 using DungeonCrawler.Core.Utils;
+using DungeonCrawler.Gameplay.Combat;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,6 +26,7 @@ namespace DungeonCrawler.Gameplay.Stats
 
         [Tooltip("Do I really need to explain?")]
         [SerializeField] private int currentXp = 0;
+        public int GetCurrentXp => currentXp;
 
         [Header("Base Stats (example)")]
         [SerializeField] private int Strength = 1;
@@ -32,6 +35,12 @@ namespace DungeonCrawler.Gameplay.Stats
 
         // Helper: get the Entity component on same GameObject
         [SerializeField] private Entity Entity => GetComponent<Entity>();
+
+        public Action<ActorStats> onExpChanged;
+        public int GetAttackDamage()
+        {
+            return Strength;
+        }
 
         /// <summary>
         /// Adds experience to this actor and returns a list of LevelUpEvent objects
@@ -67,7 +76,8 @@ namespace DungeonCrawler.Gameplay.Stats
                 {
                     remainingXp -= xpNeeded;
                     int oldLevel = Level;
-                    Level++;
+                    LevelUp();
+
                     // create LevelUpEvent for listeners (LevelSystem or others can enqueue)
                     var entityRef = Entity;
                     var lvlEv = new LevelUpEvent(entityRef, oldLevel, Level, remainingXp);
@@ -80,7 +90,16 @@ namespace DungeonCrawler.Gameplay.Stats
             }
 
             currentXp = remainingXp;
+            onExpChanged?.Invoke(this);
             return evs;
+        }
+
+        void LevelUp()
+        {
+            Level++;
+            Strength++;
+            Vitality++;
+            Intelligence++;
         }
 
         /// <summary>
@@ -90,6 +109,12 @@ namespace DungeonCrawler.Gameplay.Stats
         {
             var cfg = LevelConfig != null ? LevelConfig : fallbackConfig;
             if (cfg == null) return int.MaxValue;
+            return cfg.GetXpForLevel(Level);
+        }
+
+        public int GetRequiredExpForNextLevel()
+        {
+            var cfg = LevelConfig;
             return cfg.GetXpForLevel(Level);
         }
     }

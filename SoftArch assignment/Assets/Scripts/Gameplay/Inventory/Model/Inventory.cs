@@ -143,8 +143,10 @@ namespace DungeonCrawler.Gameplay.Inventory.Model
                 bool used = s.Definition.Use(this.gameObject, slotIndex);
                 if (used)
                 {
-                    RemoveAt(slotIndex, 1); //  TODO: server-side removal 
-                    // TODO: trigger effects (health restore, buff, etc.) via event or direct call
+                    s.Uses++;
+                    if (s.Uses >= s.Definition.ConsumptionsAmount)
+                        RemoveAt(slotIndex, 1); //  TODO: server-side removal 
+
                     OnSlotChanged?.Invoke(slotIndex);
                     OnSlotUsed?.Invoke(slotIndex);
                     return true;

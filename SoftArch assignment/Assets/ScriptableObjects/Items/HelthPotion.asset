@@ -19,5 +19,5 @@ MonoBehaviour:
   MaxStack: 3
   IsConsumable: 1
   ConsumptionsAmount: 1
-  WorldPrefab: {fileID: 6011894056739913944, guid: 023b446fbfaba5443a77e076bfa9fe18, type: 3}
+  WorldPrefab: {fileID: 4719192089386183964, guid: b614fcf0315865441bc85efc8c666c4f, type: 3}
   HealAmount: 25

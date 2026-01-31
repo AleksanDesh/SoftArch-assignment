@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// HealthBarController (rewritten to use AniDrag.CharacterComponents.HealthComponent)
+/// HealthBarController
 /// - Attach to a HUD GameObject
 /// - heartContainerPrefab must contain a child Image named "HeartFill"
-/// - Assign a HealthComponent (usually the player's HealthComponent) in the inspector
+/// - Assign a Health (usually the player's Health) in the inspector
 /// </summary>
 public class HealthBarController : MonoBehaviour
 {
@@ -27,6 +27,9 @@ public class HealthBarController : MonoBehaviour
 
     [Tooltip("Optional manual override for number of heart containers. If zero, calculated from maxHealth / healthPerHeart.")]
     public int fixedHeartCount = 0;
+
+    [Tooltip("When true, each heart will be filled as a percentage of max HP (sequential: first full, next partial, others empty).")]
+    public bool UsePercentFill = false;
 
     // runtime lists (dynamic, safer than fixed arrays)
     private readonly List<GameObject> heartContainers = new List<GameObject>();
@@ -112,9 +115,20 @@ public class HealthBarController : MonoBehaviour
             var fill = temp.transform.Find("HeartFill")?.GetComponent<Image>();
             if (fill == null)
             {
-                Debug.LogError($"HealthBarController: heart prefab must contain a child Image named 'HeartFill'. Missing on instance #{i}.", temp);
-                fill = temp.GetComponentInChildren<Image>(); // best-effort fallback
+                // fallback: search children (including inactive) for an Image component
+                fill = temp.GetComponentInChildren<Image>(true);
             }
+
+            if (fill == null)
+            {
+                Debug.LogError($"HealthBarController: heart prefab must contain a child Image named 'HeartFill'. Missing on instance #{i}.", temp);
+            }
+            else
+            {
+                // ensure it's a Filled image so fillAmount works
+                if (fill.type != Image.Type.Filled) fill.type = Image.Type.Filled;
+            }
+
             heartFills.Add(fill);
         }
     }
@@ -133,7 +147,8 @@ public class HealthBarController : MonoBehaviour
                 GameObject temp = Instantiate(heartContainerPrefab, heartsParent, false);
                 heartContainers.Add(temp);
                 var fill = temp.transform.Find("HeartFill")?.GetComponent<Image>();
-                if (fill == null) fill = temp.GetComponentInChildren<Image>();
+                if (fill == null) fill = temp.GetComponentInChildren<Image>(true);
+                if (fill != null && fill.type != Image.Type.Filled) fill.type = Image.Type.Filled;
                 heartFills.Add(fill);
             }
         }
@@ -159,8 +174,29 @@ public class HealthBarController : MonoBehaviour
 
     void SetFilledHearts(int heartCount)
     {
-        // calculate fill amount per heart using currentHealth and healthPerHeart
+        // current HP and max HP
         int current = healthComponent.GetCurrentHp();
+        int req = healthComponent.GetMaxHP();
+
+        if (UsePercentFill)
+        {
+            if (req <= 0 || heartCount <= 0) return;
+
+            // divide the total max HP evenly across the visible hearts,
+            // then fill them sequentially using current HP.
+            float capacityPerHeart = (float)req / heartCount;
+
+            for (int i = 0; i < heartCount; i++)
+            {
+                if (i >= heartFills.Count || heartFills[i] == null) continue;
+
+                float heartMin = i * capacityPerHeart;
+                float fill = Mathf.Clamp01((current - heartMin) / capacityPerHeart);
+                heartFills[i].fillAmount = fill;
+            }
+            return;
+        }
+
         for (int i = 0; i < heartCount; i++)
         {
             float heartMin = i * healthPerHeart;

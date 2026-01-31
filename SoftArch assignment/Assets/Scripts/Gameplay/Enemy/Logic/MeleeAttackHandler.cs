@@ -7,6 +7,7 @@ using DungeonCrawler.Systems.CombatSystem;
 using System.Collections;
 using DungeonCrawler.Systems.Movement;
 using UnityEngine.AI;
+using UnityEngine.Events;
 
 namespace DungeonCrawler.Gameplay.Enemy.Logic
 {
@@ -27,6 +28,10 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
         public float AttackWindUp = 0.25f;
         public float AttackRelease = 0.5f;
         public float RotationSpeed = 10f;
+
+        [Header("External logic trigger")]
+
+        public UnityEvent unityEvent = new UnityEvent();
 
         // internal state
         bool _isAttacking = false;
@@ -74,6 +79,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
 
             // set animator attack flag
             if (_animator != null) _animator.SetBool("isAttack", true);
+            unityEvent?.Invoke();
 
             // keep facing the target during windup (one look and small smoothing)
             if (target != null)
@@ -105,7 +111,7 @@ namespace DungeonCrawler.Gameplay.Enemy.Logic
                         var dmg = new DamageEvent(target, _owner, _archetype.AttackDamage);
                         EventBus.Instance.Enqueue(dmg);
                         didDamage = true;
-                        Debug.Log($"{name} dealt {_archetype.AttackDamage} to {target.name}");
+                        //Debug.Log($"{name} dealt {_archetype.AttackDamage} to {target.name}");
                     }
                 }
             }

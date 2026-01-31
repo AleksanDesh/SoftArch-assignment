@@ -9,6 +9,7 @@ namespace DungeonCrawler.Gameplay.Inventory.Model
     {
         public ItemDefinition Definition;
         public int Quantity;
+        public int Uses;
 
         public bool IsEmpty => Definition == null || Quantity <= 0;
 
@@ -16,6 +17,7 @@ namespace DungeonCrawler.Gameplay.Inventory.Model
         {
             Definition = def;
             Quantity = qty;
+            Uses = 0;
         }
     }
 }
