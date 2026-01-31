@@ -1,54 +1,64 @@
-using DungeonCrawler.Core.Utils;
+using DungeonCrawler.Core.Events;
 using DungeonCrawler.Gameplay.Combat;
 using Mirror;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+
+
+namespace DungeonCrawler.Systems
 {
-    public static GameManager Instance { get; private set; }
-
-    public GameObject localPlayer;
-
-    void Awake()
+    public class GameManager : MonoBehaviour
     {
-        if (Instance != null && Instance != this) { Destroy(this); return; }
-        Instance = this;
-    }
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-    }
+        public static GameManager Instance { get; private set; }
 
+        public GameObject localPlayer;
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (localPlayer == null) return;
-        if (Input.GetKeyDown(KeyCode.LeftAlt))
+        void Awake()
         {
-            Cursor.lockState = Cursor.lockState == CursorLockMode.None ? CursorLockMode.Locked : CursorLockMode.None;
-
-            Cursor.visible = (Cursor.lockState == CursorLockMode.None);
+            if (Instance != null && Instance != this) { Destroy(this); return; }
+            Instance = this;
         }
-
-        
-        if (Input.GetKeyDown(KeyCode.R))
-        {// Won't work properly with online stuff
-            localPlayer.GetComponent<Health>().RestoreHp();
-            //localPlayer.SetActive(true);
-            var nid = localPlayer.GetComponent<NetworkIdentity>();
-            var conn = nid.connectionToClient;
-            NetworkServer.Spawn(localPlayer, conn);
-        }
-
-        if (Input.GetKeyDown(KeyCode.G))
+        // Start is called once before the first execution of Update after the MonoBehaviour is created
+        void Start()
         {
-            bool godMode = localPlayer.GetComponent<Health>().godMode;
-            localPlayer.GetComponent<Health>().godMode = !godMode;
         }
-        
+
+
+        // Update is called once per frame
+        void Update()
+        {
+            if (localPlayer == null) return;
+            if (Input.GetKeyDown(KeyCode.LeftAlt))
+            {
+                Cursor.lockState = Cursor.lockState == CursorLockMode.None ? CursorLockMode.Locked : CursorLockMode.None;
+
+                Cursor.visible = (Cursor.lockState == CursorLockMode.None);
+            }
+
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {// Won't work properly with online stuff
+                localPlayer.GetComponent<Health>().RestoreHp();
+                //localPlayer.SetActive(true);
+                var nid = localPlayer.GetComponent<NetworkIdentity>();
+                var conn = nid.connectionToClient;
+                NetworkServer.Spawn(localPlayer, conn);
+            }
+
+            if (Input.GetKeyDown(KeyCode.G))
+            {
+                bool godMode = localPlayer.GetComponent<Health>().godMode;
+                localPlayer.GetComponent<Health>().godMode = !godMode;
+            }
+
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                Core.Events.EventBus.Instance.Enqueue(new ExperienceGainedEvent(localPlayer.GetComponent<Core.Utils.Entity>(), 999999999));
+            }
+
+        }
+
+
     }
-
-
 }

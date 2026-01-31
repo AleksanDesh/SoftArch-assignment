@@ -21,8 +21,8 @@ namespace DungeonCrawler.Gameplay.Inventory
         void Setup()
         {
             if (_settedUp) return;
-            if (GameManager.Instance.localPlayer != null)
-                _inventory = GameManager.Instance.localPlayer.GetComponent<Model.Inventory>();
+            if (Systems.GameManager.Instance.localPlayer != null)
+                _inventory = Systems.GameManager.Instance.localPlayer.GetComponent<Model.Inventory>();
             else
             {
                 Debug.LogWarning("No local player found, have you started the server and spawned?");

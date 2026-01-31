@@ -19,7 +19,7 @@ namespace DungeonCrawler.Gameplay.Player.Controller
         {
             if (!isLocalPlayer) return;
 
-            GameManager.Instance.localPlayer = this.gameObject;
+            Systems.GameManager.Instance.localPlayer = this.gameObject;
 
             CharacterCamera = Camera.main.GetComponent<MyCharacterCamera>();
 
